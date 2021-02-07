@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using SCHelper.Dtos;
 using SCHelper.Services;
 using SCHelper.Services.Impl;
 using System.IO;
@@ -44,9 +45,10 @@ namespace SCHelper
         private static ServiceProvider GetServiceProvider(IConfiguration configuration)
         {
             return new ServiceCollection()
+                .AddSingleton<IConversionService, ConversionService>()
                 .AddSingleton<IDataProvider, DataProvider>()
                 .AddSingleton<Startup, Startup>()
-                .AddSingleton(configuration)
+                .Configure<ConfigModel>(configuration)
                 .AddLogging(loggingBuilder => loggingBuilder
                     .ClearProviders()
                     .AddConsole()

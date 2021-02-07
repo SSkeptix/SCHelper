@@ -1,6 +1,11 @@
-﻿namespace SCHelper.Services
+﻿using SCHelper.Dtos;
+
+namespace SCHelper.Services
 {
     public interface IDataProvider
     {
+        Weapon[] GetWeapons();
+        Ship[] GetShips();
+        SeedChip[] GetSeedChips();
     }
 }
