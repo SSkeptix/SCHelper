@@ -2,22 +2,17 @@
 using SCHelper.Dtos;
 using System;
 using System.IO;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Unicode;
 using System.Threading.Tasks;
 
 namespace SCHelper.Services.Impl
 {
     public class ExportDataService : IExportDataService
     {
-        private readonly ConfigModel configModel;
-
-        public ExportDataService(IOptions<ConfigModel> configModel)
-        {
-            this.configModel = configModel.Value;
-        }
-
-        public Task Export(ShipParameters data)
+        public Task Export(string filePath, ShipParameters data)
         {
             var userData = data with 
             {
@@ -25,17 +20,23 @@ namespace SCHelper.Services.Impl
                 CriticalChance = 100 * data.CriticalChance
             };
 
-            var serializationOptions = new JsonSerializerOptions
+            return this.ExportData(filePath, userData);
+        }
+
+        public Task ExportData(string filePath, object data)
+        {
+            var serializationOptions = new JsonSerializerOptions()
             {
                 AllowTrailingCommas = true,
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
                 WriteIndented = true,
             };
             serializationOptions.Converters.Add(new JsonStringEnumConverter());
             serializationOptions.Converters.Add(new DoubleConverter());
 
-            var jsonData = JsonSerializer.Serialize(userData, serializationOptions);
-            return File.WriteAllTextAsync(this.configModel.OutputFile, jsonData);
+            var jsonData = JsonSerializer.Serialize(data, serializationOptions);
+            return File.WriteAllTextAsync(filePath, jsonData);
         }
     }
 

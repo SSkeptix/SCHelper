@@ -11,35 +11,19 @@ namespace SCHelper
 {
     public class Program
     {
-        private const string DefaultConfigFileName = "appsettings.json";
-
         public static Task Main(string[] args)
         {
-            var configuration = GetConfiguration();
-            if (configuration == null)
-                return Task.CompletedTask;
+            var configuration = new ConfigurationBuilder()
+                .AddJsonFile(Constants.ConfigFilePath, true, true)
+                .Build();
 
             using (var serviceProvider = GetServiceProvider(configuration))
             {
                 var startup = serviceProvider.GetService<Startup>();
-                return startup.Execute();
+                return File.Exists(Constants.ConfigFilePath)
+                    ? startup.Execute()
+                    : startup.GenerateDocumentation();
             };
-        }
-
-        private static IConfiguration GetConfiguration()
-        {
-            if (File.Exists(DefaultConfigFileName))
-            {
-                return new ConfigurationBuilder()
-                    .AddJsonFile(DefaultConfigFileName, false, true)
-                    .Build();
-            }
-            else
-            {
-                // Create sample file
-                // Create ReadMe.txt
-                return null;
-            }            
         }
 
         private static ServiceProvider GetServiceProvider(IConfiguration configuration)

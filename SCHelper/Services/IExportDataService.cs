@@ -5,6 +5,8 @@ namespace SCHelper.Services
 {
     public interface IExportDataService
     {
-        Task Export(ShipParameters data);
+        Task Export(string filePath, ShipParameters data);
+
+        Task ExportData(string filePath, object data);
     }
 }

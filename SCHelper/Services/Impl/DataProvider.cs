@@ -6,28 +6,28 @@ namespace SCHelper.Services.Impl
 {
     public class DataProvider : IDataProvider
     {
-        private readonly ConfigModel configModel;
+        private readonly ConfigModel config;
         private readonly IConversionService conversionService;
 
         public DataProvider(IOptions<ConfigModel> configModel,
             IConversionService conversionService)
         {
-            this.configModel = configModel.Value;
+            this.config = configModel.Value;
             this.conversionService = conversionService;
         }
 
         public Weapon[] GetWeapons()
-            => configModel.Weapons
+            => config.Weapons
                 .Select(x => this.conversionService.ToDomainModel(x))
                 .ToArray();
 
         public Ship[] GetShips()
-            => configModel.Ships
+            => config.Ships
                 .Select(x => this.conversionService.ToDomainModel(x))
                 .ToArray();
 
         public SeedChip[] GetSeedChips()
-            => configModel.SeedChips
+            => config.SeedChips
                 .Select(x => new SeedChip(
                     Parameters: this.conversionService.ToDomainModel(x)
                 ))
