@@ -48,6 +48,7 @@ namespace SCHelper
                 .AddSingleton<ICalculationService, CalculationService>()
                 .AddSingleton<IConversionService, ConversionService>()
                 .AddSingleton<IDataProvider, DataProvider>()
+                .AddSingleton<IExportDataService, ExportDataService>()
                 .AddSingleton<Startup, Startup>()
                 .Configure<ConfigModel>(configuration)
                 .AddLogging(loggingBuilder => loggingBuilder

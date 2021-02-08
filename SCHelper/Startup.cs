@@ -9,15 +9,18 @@ namespace SCHelper
     {
         private readonly ICalculationService calculationService;
         private readonly IDataProvider dataProvider;
+        private readonly IExportDataService exportDataService;
         private readonly ILogger<Startup> logger;
 
         public Startup(
             ICalculationService calculationService,
             IDataProvider dataProvider,
+            IExportDataService exportDataService,
             ILogger<Startup> logger)
         {
             this.calculationService = calculationService;
             this.dataProvider = dataProvider;
+            this.exportDataService = exportDataService;
             this.logger = logger;
         }
 
@@ -26,12 +29,8 @@ namespace SCHelper
             var weapon = this.dataProvider.GetWeapons().First();
             var ship = this.dataProvider.GetShips().First();
             var seedChips = this.dataProvider.GetSeedChips();
-
             var shipParameters = this.calculationService.CalcShipParameters(weapon, ship, seedChips);
-
-            this.logger.LogDebug("Dps: " + shipParameters.Damage.Dps);
-
-            return Task.CompletedTask;
+            return this.exportDataService.Export(shipParameters);
         }
     }
 }

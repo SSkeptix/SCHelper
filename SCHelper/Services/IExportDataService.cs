@@ -1,0 +1,10 @@
+﻿using SCHelper.Dtos;
+using System.Threading.Tasks;
+
+namespace SCHelper.Services
+{
+    public interface IExportDataService
+    {
+        Task Export(ShipParameters data);
+    }
+}
