@@ -1,6 +1,6 @@
 ﻿namespace SCHelper
 {
-    public enum WeaponDamageType
+    public enum DamageType
     {
         Kinetic,
         Termal,

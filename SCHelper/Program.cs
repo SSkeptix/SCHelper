@@ -45,6 +45,7 @@ namespace SCHelper
         private static ServiceProvider GetServiceProvider(IConfiguration configuration)
         {
             return new ServiceCollection()
+                .AddSingleton<ICalculationService, CalculationService>()
                 .AddSingleton<IConversionService, ConversionService>()
                 .AddSingleton<IDataProvider, DataProvider>()
                 .AddSingleton<Startup, Startup>()

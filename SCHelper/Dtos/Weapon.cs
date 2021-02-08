@@ -2,7 +2,7 @@
 {
     public record Weapon(
         string Name,
-        WeaponDamageType WeaponDamageType,
+        DamageType DamageType,
         double Damage,
         double FireRate,
         double CriticalChance,

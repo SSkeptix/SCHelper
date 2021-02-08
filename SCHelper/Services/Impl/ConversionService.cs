@@ -16,7 +16,7 @@ namespace SCHelper.Services.Impl
         public Weapon ToDomainModel(WeaponConfigModel weapon)
             => new Weapon(
                 Name: weapon.Name,
-                WeaponDamageType: weapon.WeaponDamageType,
+                DamageType: weapon.DamageType,
                 Damage: weapon.Damage,
                 FireRate: weapon.FireRate / 60,
                 CriticalChance: weapon.CriticalChance / 100,
@@ -30,6 +30,16 @@ namespace SCHelper.Services.Impl
             );
 
         public Dictionary<ModificationType, double> ToDomainModel(Dictionary<ModificationType, double?> modifications)
-            => modifications.ToDictionary(x => x.Key, x => (x.Value ?? 0) / 100);
+        {
+            var result = modifications.ToDictionary(x => x.Key, x => (x.Value ?? 0) / 100);
+
+            foreach (var modificationType in Utils.GetEnumValues<ModificationType>())
+            {
+                if (!result.ContainsKey(modificationType))
+                    result[modificationType] = 0;
+            }
+
+            return result;
+        }
     }
 }

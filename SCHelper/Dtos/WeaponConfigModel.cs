@@ -3,7 +3,7 @@
     public class WeaponConfigModel
     {
         public string Name { get; set; }
-        public WeaponDamageType WeaponDamageType { get; set; }
+        public DamageType DamageType { get; set; }
         public double Damage { get; set; }
         public double FireRate { get; set; }
         public double CriticalChance { get; set; }
