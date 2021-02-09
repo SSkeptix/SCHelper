@@ -4,6 +4,8 @@ namespace SCHelper.Dtos
 {
     public class CalculationCommandConfigModel
     {
+        public string Name { get; set; }
+
         public ShipConfigModel Ship { get; set; }
         public string ShipName { get; set; }
 
@@ -11,5 +13,9 @@ namespace SCHelper.Dtos
         public string WeaponName { get; set; }
 
         public Dictionary<ModificationType, double?>[] SeedChips { get; set; }
+
+        public Dictionary<ModificationType, double?> Implants { get; set; }
+
+        public Dictionary<ModificationType, double?> Modules { get; set; }
     }
 }

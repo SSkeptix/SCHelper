@@ -18,7 +18,7 @@ namespace SCHelper.Services.Impl
                 max: max
             );
 
-        public ShipParameters CalcShipParameters(CalculationCommand command)
+        public CalculationResult Calc(CalculationCommand command)
         {
             var modifications = this.CalcModifications(command);
             var multipliers = this.CalcMultipliers(modifications);
@@ -43,7 +43,8 @@ namespace SCHelper.Services.Impl
                 DpsWithHit: 0);
             var destroyerDamageDescription = damageDescription.Multiply(multipliers[ModificationType.DestroyerDamage]);
 
-            return new ShipParameters(
+            return new CalculationResult(
+                Name: command.Name,
                 ShipName: command.Ship.Name,
                 WeaponName: command.Weapon.Name,
                 DamageTarget: new Dictionary<DamageTarget, DamageDescription>
@@ -70,6 +71,8 @@ namespace SCHelper.Services.Impl
         {
             return command.SeedChips.Select(x => x.Parameters)
                 .Append(command.Ship.Bonuses)
+                .Append(command.Implants)
+                .Append(command.Modules)
                 .Append(new Dictionary<ModificationType, double>
                 {
                     [ModificationType.CriticalChance] = command.Weapon.CriticalChance,

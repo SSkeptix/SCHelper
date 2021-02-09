@@ -51,11 +51,17 @@ namespace SCHelper
                         errors.Add("There is no weapon. Property Weapon is null and WeaponName is invalid.");
 
                     if (errors.Any())
-                        return new { Errors = errors.ToArray() };
+                    {
+                        return new
+                        {
+                            Name = cmd.Name,
+                            Errors = errors.ToArray()
+                        };
+                    }
                     else
                     {
-                        var shipParameters = this.calculationService.CalcShipParameters(cmd);
-                        return (object)this.conversionService.ToUserDataModel(shipParameters);
+                        CalculationResult result = this.calculationService.Calc(cmd);
+                        return (object)this.conversionService.ToUserDataModel(result);
                     }
                 })
                 .ToArray();

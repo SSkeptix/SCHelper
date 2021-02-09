@@ -4,6 +4,6 @@ namespace SCHelper.Services
 {
     public interface ICalculationService
     {
-        ShipParameters CalcShipParameters(CalculationCommand command);
+        CalculationResult Calc(CalculationCommand command);
     }
 }

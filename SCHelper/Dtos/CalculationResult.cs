@@ -2,7 +2,8 @@
 
 namespace SCHelper.Dtos
 {
-    public record ShipParameters(
+    public record CalculationResult(
+        string Name,
         string ShipName,
         string WeaponName,
         Dictionary<DamageTarget, DamageDescription> DamageTarget,
@@ -22,7 +23,7 @@ namespace SCHelper.Dtos
         double Dps,
         double DpsWithHit);
 
-    public static class ShipParameterExtension
+    public static class DamageDescriptionExtension
     {
         public static DamageDescription Multiply(this DamageDescription source, double multiplier)
             => new DamageDescription(

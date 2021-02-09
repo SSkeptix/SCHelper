@@ -46,6 +46,7 @@ namespace SCHelper.Services.Impl
 
             return (config.Calculate ?? Array.Empty<CalculationCommandConfigModel>())
                 .Select(cmd => new CalculationCommand(
+                    Name: cmd.Name,
                     Ship: cmd.Ship != null
                         ? this.conversionService.ToDomainModel(cmd.Ship)
                         : ships.FirstOrDefault(x => x.Name == cmd.ShipName),
@@ -57,7 +58,9 @@ namespace SCHelper.Services.Impl
                         .Select(x => new SeedChip(
                             Parameters: this.conversionService.ToDomainModel(x)))
                         .ToArray()
-                        ?? seedChips
+                        ?? seedChips,
+                    Implants: this.conversionService.ToDomainModel(cmd.Implants ?? Utils.GetEmptyDictionary<ModificationType, double?>()),
+                    Modules: this.conversionService.ToDomainModel(cmd.Modules ?? Utils.GetEmptyDictionary<ModificationType, double?>())
                 ))
                 .ToArray();
         }

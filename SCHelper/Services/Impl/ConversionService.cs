@@ -34,7 +34,7 @@ namespace SCHelper.Services.Impl
                 .Override(modifications)
                 .ToDictionary(x => x.Key, x => (x.Value ?? 0) / 100);
 
-        public ShipParameters ToUserDataModel(ShipParameters data)
+        public CalculationResult ToUserDataModel(CalculationResult data)
             => data with
             {
                 FireRate = 60 * data.FireRate,

@@ -9,6 +9,6 @@ namespace SCHelper.Services
         Weapon ToDomainModel(WeaponConfigModel weapon);
         Dictionary<ModificationType, double> ToDomainModel(Dictionary<ModificationType, double?> modifications);
 
-        ShipParameters ToUserDataModel(ShipParameters data);
+        CalculationResult ToUserDataModel(CalculationResult data);
     }
 }
