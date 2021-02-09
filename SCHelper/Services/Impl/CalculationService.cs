@@ -44,7 +44,8 @@ namespace SCHelper.Services.Impl
             var destroyerDamageDescription = damageDescription.Multiply(multipliers[ModificationType.DestroyerDamage]);
 
             return new ShipParameters(
-                Name: command.Ship.Name,
+                ShipName: command.Ship.Name,
+                WeaponName: command.Weapon.Name,
                 DamageTarget: new Dictionary<DamageTarget, DamageDescription>
                 {
                     [DamageTarget.Normal] = damageDescription,

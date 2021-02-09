@@ -3,7 +3,8 @@
 namespace SCHelper.Dtos
 {
     public record ShipParameters(
-        string Name,
+        string ShipName,
+        string WeaponName,
         Dictionary<DamageTarget, DamageDescription> DamageTarget,
         DamageType DamageType,
         double FireRate,

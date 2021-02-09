@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using SCHelper.Dtos;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace SCHelper.Services.Impl
@@ -17,17 +19,20 @@ namespace SCHelper.Services.Impl
         }
 
         public Weapon[] GetWeapons()
-            => config.Weapons
+            => (config.Weapons ?? Array.Empty<WeaponConfigModel>())
+                .Where(x => x != null)
                 .Select(x => this.conversionService.ToDomainModel(x))
                 .ToArray();
 
         public Ship[] GetShips()
-            => config.Ships
+            => (config.Ships ?? Array.Empty<ShipConfigModel>())
+                .Where(x => x != null)
                 .Select(x => this.conversionService.ToDomainModel(x))
                 .ToArray();
 
         public SeedChip[] GetSeedChips()
-            => config.SeedChips
+            => (config.SeedChips ?? Array.Empty<Dictionary<ModificationType, double?>>())
+                .Where(x => x != null)
                 .Select(x => new SeedChip(
                     Parameters: this.conversionService.ToDomainModel(x)
                 ))
@@ -39,7 +44,7 @@ namespace SCHelper.Services.Impl
             var weapons = this.GetWeapons();
             var seedChips = this.GetSeedChips();
 
-            return config.Calculate
+            return (config.Calculate ?? Array.Empty<CalculationCommandConfigModel>())
                 .Select(cmd => new CalculationCommand(
                     Ship: cmd.Ship != null
                         ? this.conversionService.ToDomainModel(cmd.Ship)
@@ -48,7 +53,8 @@ namespace SCHelper.Services.Impl
                         ? this.conversionService.ToDomainModel(cmd.Weapon)
                         : weapons.FirstOrDefault(x => x.Name == cmd.WeaponName),
                     SeedChips: cmd.SeedChips
-                        ?.Select(x => new SeedChip(
+                        ?.Where(x => x != null)
+                        .Select(x => new SeedChip(
                             Parameters: this.conversionService.ToDomainModel(x)))
                         .ToArray()
                         ?? seedChips

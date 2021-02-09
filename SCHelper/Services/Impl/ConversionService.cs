@@ -10,7 +10,7 @@ namespace SCHelper.Services.Impl
             => new Ship(
                 Name: ship.Name,
                 WeaponCount: ship.WeaponCount,
-                Bonuses: this.ToDomainModel(ship.Bonuses)
+                Bonuses: this.ToDomainModel(ship.Bonuses ?? new Dictionary<ModificationType, double?>())
             );
 
         public Weapon ToDomainModel(WeaponConfigModel weapon)
@@ -30,17 +30,9 @@ namespace SCHelper.Services.Impl
             );
 
         public Dictionary<ModificationType, double> ToDomainModel(Dictionary<ModificationType, double?> modifications)
-        {
-            var result = modifications.ToDictionary(x => x.Key, x => (x.Value ?? 0) / 100);
-
-            foreach (var modificationType in Utils.GetEnumValues<ModificationType>())
-            {
-                if (!result.ContainsKey(modificationType))
-                    result[modificationType] = 0;
-            }
-
-            return result;
-        }
+            => Utils.GetEmptyDictionary<ModificationType, double?>()
+                .Override(modifications)
+                .ToDictionary(x => x.Key, x => (x.Value ?? 0) / 100);
 
         public ShipParameters ToUserDataModel(ShipParameters data)
             => data with
