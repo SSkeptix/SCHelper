@@ -10,6 +10,7 @@ namespace SCHelper.Services.Impl
             => new Ship(
                 Name: ship.Name,
                 WeaponCount: ship.WeaponCount,
+                MaxChipCount: ship.MaxChipCount ?? 5,
                 Bonuses: this.ToDomainModel(ship.Bonuses ?? new Dictionary<ModificationType, double?>())
             );
 
@@ -27,6 +28,12 @@ namespace SCHelper.Services.Impl
                 FireSpread: weapon.FireSpread,
                 ProjectiveSpeed: weapon.ProjectiveSpeed,
                 DecreaseHullResistance: weapon.DecreaseHullResistance / 100
+            );
+
+        public SeedChip ToDomainModel(SeedChipConfigModel seedChip)
+            => new SeedChip(
+                Name: seedChip.Name,
+                Parameters: this.ToDomainModel(seedChip.Parameters ?? new Dictionary<ModificationType, double?>())
             );
 
         public Dictionary<ModificationType, double> ToDomainModel(Dictionary<ModificationType, double?> modifications)

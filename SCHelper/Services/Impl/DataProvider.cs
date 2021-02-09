@@ -31,11 +31,9 @@ namespace SCHelper.Services.Impl
                 .ToArray();
 
         public SeedChip[] GetSeedChips()
-            => (config.SeedChips ?? Array.Empty<Dictionary<ModificationType, double?>>())
+            => (config.SeedChips ?? Array.Empty<SeedChipConfigModel>())
                 .Where(x => x != null)
-                .Select(x => new SeedChip(
-                    Parameters: this.conversionService.ToDomainModel(x)
-                ))
+                .Select(x => this.conversionService.ToDomainModel(x))
                 .ToArray();
 
         public CalculationCommand[] GetCalculationCommands()
@@ -55,8 +53,7 @@ namespace SCHelper.Services.Impl
                         : weapons.FirstOrDefault(x => x.Name == cmd.WeaponName),
                     SeedChips: cmd.SeedChips
                         ?.Where(x => x != null)
-                        .Select(x => new SeedChip(
-                            Parameters: this.conversionService.ToDomainModel(x)))
+                        .Select(x => this.conversionService.ToDomainModel(x))
                         .ToArray()
                         ?? seedChips,
                     Implants: this.conversionService.ToDomainModel(cmd.Implants ?? Utils.GetEmptyDictionary<ModificationType, double?>()),

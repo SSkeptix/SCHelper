@@ -12,6 +12,6 @@ namespace SCHelper.Dtos
         
         public WeaponConfigModel[] Weapons { get; set; }
 
-        public Dictionary<ModificationType, double?>[] SeedChips { get; set; }
+        public SeedChipConfigModel[] SeedChips { get; set; }
     }
 }

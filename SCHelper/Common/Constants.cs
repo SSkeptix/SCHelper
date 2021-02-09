@@ -98,13 +98,33 @@ namespace SCHelper
                     ProjectiveSpeed = 6000,
                 },
             },
-            SeedChips = new Dictionary<ModificationType, double?>[]
+            SeedChips = new SeedChipConfigModel[]
             {
-                Constants.SeedChipSample,
-                Utils.GetEmptyDictionary<ModificationType, double?>(),
-                Utils.GetEmptyDictionary<ModificationType, double?>().Override(Constants.SeedChipSample),
-                Utils.GetEmptyDictionary<ModificationType, double?>(0),
-                Utils.GetEmptyDictionary<ModificationType, double?>(0).Override(Constants.SeedChipSample),
+                new SeedChipConfigModel
+                {
+                    Name = "Seed Chip Name",
+                    Parameters = Constants.SeedChipSample,
+                },
+                new SeedChipConfigModel
+                {
+                    Name = "Seed Chip Name",
+                    Parameters = Utils.GetEmptyDictionary<ModificationType, double?>(),
+                },
+                new SeedChipConfigModel
+                {
+                    Name = "Seed Chip Name",
+                    Parameters = Utils.GetEmptyDictionary<ModificationType, double?>().Override(Constants.SeedChipSample),
+                },
+                new SeedChipConfigModel
+                {
+                    Name = "Seed Chip Name",
+                    Parameters = Utils.GetEmptyDictionary<ModificationType, double?>(0),
+                },
+                new SeedChipConfigModel
+                {
+                    Name = "Seed Chip Name",
+                    Parameters = Utils.GetEmptyDictionary<ModificationType, double?>(0).Override(Constants.SeedChipSample),
+                },
             },
         };
     }

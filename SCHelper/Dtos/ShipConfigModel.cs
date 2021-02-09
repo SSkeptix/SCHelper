@@ -6,6 +6,7 @@ namespace SCHelper.Dtos
     {
         public string Name { get; set; }
         public int WeaponCount { get; set; }
+        public int? MaxChipCount { get; set; }
         public Dictionary<ModificationType, double?> Bonuses { get; set; }
     }
 }
