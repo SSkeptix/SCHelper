@@ -7,5 +7,6 @@ namespace SCHelper.Services
         Weapon[] GetWeapons();
         Ship[] GetShips();
         SeedChip[] GetSeedChips();
+        CalculationCommand[] GetCalculationCommands();
     }
 }

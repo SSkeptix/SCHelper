@@ -6,6 +6,8 @@ namespace SCHelper.Dtos
     {
         public string OutputFile { get; set; }
 
+        public CalculationCommandConfigModel[] Calculate { get; set; }
+
         public ShipConfigModel[] Ships { get; set; }
         
         public WeaponConfigModel[] Weapons { get; set; }

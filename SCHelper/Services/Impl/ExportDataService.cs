@@ -12,18 +12,7 @@ namespace SCHelper.Services.Impl
 {
     public class ExportDataService : IExportDataService
     {
-        public Task Export(string filePath, ShipParameters data)
-        {
-            var userData = data with 
-            {
-                FireRate = 60 * data.FireRate,
-                CriticalChance = 100 * data.CriticalChance
-            };
-
-            return this.ExportData(filePath, userData);
-        }
-
-        public Task ExportData(string filePath, object data)
+        public Task Export(string filePath, object data)
         {
             var serializationOptions = new JsonSerializerOptions()
             {

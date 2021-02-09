@@ -18,22 +18,22 @@ namespace SCHelper.Services.Impl
                 max: max
             );
 
-        public ShipParameters CalcShipParameters(Weapon weapon, Ship ship, SeedChip[] seedChip)
+        public ShipParameters CalcShipParameters(CalculationCommand command)
         {
-            var modifications = this.CalcModifications(weapon, ship, seedChip);
+            var modifications = this.CalcModifications(command);
             var multipliers = this.CalcMultipliers(modifications);
 
-            var damage = ship.WeaponCount * 
-                weapon.Damage *
+            var damage = command.Ship.WeaponCount *
+                command.Weapon.Damage *
                 multipliers[ModificationType.Damage] *
-                weapon.DamageType switch
+                command.Weapon.DamageType switch
                 {
                     DamageType.Electromagnetic => multipliers[ModificationType.ElectromagneticDamage],
                     DamageType.Kinetic => multipliers[ModificationType.KineticDamage],
                     DamageType.Termal => multipliers[ModificationType.TermalDamage],
                     _ => throw new NotImplementedException()
                 };
-            var fireRate = weapon.FireRate * multipliers[ModificationType.FireRate];
+            var fireRate = command.Weapon.FireRate * multipliers[ModificationType.FireRate];
             var dps = damage * fireRate * (1 + multipliers[ModificationType.CriticalChance] * multipliers[ModificationType.CriticalDamage]);
 
             var damageDescription = new DamageDescription(
@@ -44,7 +44,7 @@ namespace SCHelper.Services.Impl
             var destroyerDamageDescription = damageDescription.Multiply(multipliers[ModificationType.DestroyerDamage]);
 
             return new ShipParameters(
-                Name: ship.Name,
+                Name: command.Ship.Name,
                 DamageTarget: new Dictionary<DamageTarget, DamageDescription>
                 {
                     [DamageTarget.Normal] = damageDescription,
@@ -54,26 +54,26 @@ namespace SCHelper.Services.Impl
                     [DamageTarget.DestroyerAlien] = destroyerDamageDescription.Multiply(multipliers[ModificationType.AlienDamage]),
                     [DamageTarget.DestroyerElidium] = destroyerDamageDescription.Multiply(multipliers[ModificationType.ElidiumDamage]),
                 },
-                DamageType: weapon.DamageType,
+                DamageType: command.Weapon.DamageType,
                 FireRate: fireRate,
                 CriticalChance: multipliers[ModificationType.CriticalChance],
                 HitTime: 0,
                 CoollingTime: 0,
-                FireRange: weapon.FireRange * multipliers[ModificationType.FireRange],
-                FireSpread: weapon.FireSpread * multipliers[ModificationType.FireSpread],
-                ProjectiveSpeed: weapon.ProjectiveSpeed * multipliers[ModificationType.ProjectiveSpeed],
-                DecreaseHullResistance: weapon.DecreaseHullResistance + multipliers[ModificationType.DecreaseResistance]);
+                FireRange: command.Weapon.FireRange * multipliers[ModificationType.FireRange],
+                FireSpread: command.Weapon.FireSpread * multipliers[ModificationType.FireSpread],
+                ProjectiveSpeed: command.Weapon.ProjectiveSpeed * multipliers[ModificationType.ProjectiveSpeed],
+                DecreaseHullResistance: command.Weapon.DecreaseHullResistance + multipliers[ModificationType.DecreaseResistance]);
         }
 
-        public Dictionary<ModificationType, IEnumerable<double>> CalcModifications(Weapon weapon, Ship ship, SeedChip[] seedChip)
+        public Dictionary<ModificationType, IEnumerable<double>> CalcModifications(CalculationCommand command)
         {
-            return seedChip.Select(x => x.Parameters)
-                .Append(ship.Bonuses)
+            return command.SeedChips.Select(x => x.Parameters)
+                .Append(command.Ship.Bonuses)
                 .Append(new Dictionary<ModificationType, double>
                 {
-                    [ModificationType.CriticalChance] = weapon.CriticalChance,
-                    [ModificationType.CriticalDamage] = weapon.CriticalDamage,
-                    [ModificationType.DecreaseResistance] = weapon.DecreaseHullResistance,
+                    [ModificationType.CriticalChance] = command.Weapon.CriticalChance,
+                    [ModificationType.CriticalDamage] = command.Weapon.CriticalDamage,
+                    [ModificationType.DecreaseResistance] = command.Weapon.DecreaseHullResistance,
                 })
                 .SelectMany(x => x)
                 .GroupBy(x => x.Key)

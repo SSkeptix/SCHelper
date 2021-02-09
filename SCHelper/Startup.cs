@@ -10,6 +10,7 @@ namespace SCHelper
     public class Startup
     {
         private readonly ICalculationService calculationService;
+        private readonly IConversionService conversionService;
         private readonly IDataProvider dataProvider;
         private readonly IExportDataService exportDataService;
         private readonly ILogger<Startup> logger;
@@ -17,12 +18,14 @@ namespace SCHelper
 
         public Startup(
             ICalculationService calculationService,
+            IConversionService conversionService,
             IDataProvider dataProvider,
             IExportDataService exportDataService,
             ILogger<Startup> logger,
             IOptions<ConfigModel> configModel)
         {
             this.calculationService = calculationService;
+            this.conversionService = conversionService;
             this.dataProvider = dataProvider;
             this.exportDataService = exportDataService;
             this.logger = logger;
@@ -31,15 +34,18 @@ namespace SCHelper
 
         //TODO: Add ReadMe.txt file generation
         public Task GenerateDocumentation()
-            => this.exportDataService.ExportData(Constants.ConfigFilePath, Constants.DefaultConfigModel);
+            => this.exportDataService.Export(Constants.ConfigFilePath, Constants.DefaultConfigModel);
 
         public Task Execute()
         {
-            var weapon = this.dataProvider.GetWeapons().First();
-            var ship = this.dataProvider.GetShips().First();
-            var seedChips = this.dataProvider.GetSeedChips();
-            var shipParameters = this.calculationService.CalcShipParameters(weapon, ship, seedChips);
-            return this.exportDataService.Export(config.OutputFile, shipParameters);
+            var calculationCommands = this.dataProvider.GetCalculationCommands();
+
+            ShipParameters[] userData = calculationCommands
+                .Select(cmd => this.calculationService.CalcShipParameters(cmd))
+                .Select(shipDetails => this.conversionService.ToUserDataModel(shipDetails))
+                .ToArray();
+
+            return this.exportDataService.Export(config.OutputFile, userData);
         }
     }
 }

@@ -8,5 +8,7 @@ namespace SCHelper.Services
         Ship ToDomainModel(ShipConfigModel ship);
         Weapon ToDomainModel(WeaponConfigModel weapon);
         Dictionary<ModificationType, double> ToDomainModel(Dictionary<ModificationType, double?> modifications);
+
+        ShipParameters ToUserDataModel(ShipParameters data);
     }
 }

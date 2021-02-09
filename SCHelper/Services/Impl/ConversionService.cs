@@ -41,5 +41,12 @@ namespace SCHelper.Services.Impl
 
             return result;
         }
+
+        public ShipParameters ToUserDataModel(ShipParameters data)
+            => data with
+            {
+                FireRate = 60 * data.FireRate,
+                CriticalChance = 100 * data.CriticalChance
+            };
     }
 }
