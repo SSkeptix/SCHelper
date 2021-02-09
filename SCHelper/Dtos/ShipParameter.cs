@@ -1,14 +1,10 @@
-﻿namespace SCHelper.Dtos
+﻿using System.Collections.Generic;
+
+namespace SCHelper.Dtos
 {
     public record ShipParameters(
-        DamageDescription Damage,
-        DamageDescription DestroyerDamage,
-        DamageDescription AlienDamage,
-        DamageDescription ElidiumDamage,
-        DamageDescription DestroyerAlienDamage,
-        DamageDescription DestroyerElidiumDamage,
-
         string Name,
+        Dictionary<DamageTarget, DamageDescription> DamageTarget,
         DamageType DamageType,
         double FireRate,
         double CriticalChance,

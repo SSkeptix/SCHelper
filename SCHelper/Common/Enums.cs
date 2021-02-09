@@ -7,6 +7,16 @@
         Electromagnetic,
     }
 
+    public enum DamageTarget
+    {
+        Normal,
+        Destroyer,
+        Alien,
+        Elidium,
+        DestroyerAlien,
+        DestroyerElidium
+    }
+
     public enum ModificationType
     {
         Damage,

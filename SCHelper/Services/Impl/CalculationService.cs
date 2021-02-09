@@ -44,14 +44,16 @@ namespace SCHelper.Services.Impl
             var destroyerDamageDescription = damageDescription.Multiply(multipliers[ModificationType.DestroyerDamage]);
 
             return new ShipParameters(
-                Damage: damageDescription,
-                DestroyerDamage: destroyerDamageDescription,
-                AlienDamage: damageDescription.Multiply(multipliers[ModificationType.AlienDamage]),
-                ElidiumDamage: damageDescription.Multiply(multipliers[ModificationType.ElidiumDamage]),
-                DestroyerAlienDamage: destroyerDamageDescription.Multiply(multipliers[ModificationType.AlienDamage]),
-                DestroyerElidiumDamage: destroyerDamageDescription.Multiply(multipliers[ModificationType.ElidiumDamage]),
-                
                 Name: ship.Name,
+                DamageTarget: new Dictionary<DamageTarget, DamageDescription>
+                {
+                    [DamageTarget.Normal] = damageDescription,
+                    [DamageTarget.Destroyer] = destroyerDamageDescription,
+                    [DamageTarget.Alien] = damageDescription.Multiply(multipliers[ModificationType.AlienDamage]),
+                    [DamageTarget.Elidium] = damageDescription.Multiply(multipliers[ModificationType.ElidiumDamage]),
+                    [DamageTarget.DestroyerAlien] = destroyerDamageDescription.Multiply(multipliers[ModificationType.AlienDamage]),
+                    [DamageTarget.DestroyerElidium] = destroyerDamageDescription.Multiply(multipliers[ModificationType.ElidiumDamage]),
+                },
                 DamageType: weapon.DamageType,
                 FireRate: fireRate,
                 CriticalChance: multipliers[ModificationType.CriticalChance],
