@@ -10,8 +10,7 @@
         double HitTime,
         double CoollingTime,
         double FireRange,
-        double FireSpread,
-        double ProjectiveSpeed,
-        double DecreaseHullResistance
-    );
+        double? FireSpread,
+        double? ProjectiveSpeed,
+        double DecreaseResistance);
 }

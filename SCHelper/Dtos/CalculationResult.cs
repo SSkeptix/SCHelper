@@ -13,9 +13,10 @@ namespace SCHelper.Dtos
         double HitTime,
         double CoollingTime,
         double FireRange,
-        double FireSpread,
-        double ProjectiveSpeed,
-        double DecreaseHullResistance);
+        double? FireSpread,
+        double? ProjectiveSpeed,
+        double DecreaseResistance,
+        SeedChip[] SeedChips);
 
     public record DamageDescription(
         double Damage,

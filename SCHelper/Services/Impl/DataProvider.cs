@@ -45,6 +45,7 @@ namespace SCHelper.Services.Impl
             return (config.Calculate ?? Array.Empty<CalculationCommandConfigModel>())
                 .Select(cmd => new CalculationCommand(
                     Name: cmd.Name,
+                    DamageTarget: cmd.DamageTarget ?? DamageTarget.Normal,
                     Ship: cmd.Ship != null
                         ? this.conversionService.ToDomainModel(cmd.Ship)
                         : ships.FirstOrDefault(x => x.Name == cmd.ShipName),

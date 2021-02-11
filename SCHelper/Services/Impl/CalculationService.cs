@@ -18,6 +18,15 @@ namespace SCHelper.Services.Impl
                 max: max
             );
 
+        public CalculationResult CalcBestDps(CalculationCommand command)
+            => Utils.GetAllCombinations(
+                    data: command.SeedChips.Where(x => x.Level <= command.Ship.Level).ToArray(),
+                    count: command.Ship.MaxChipCount)
+                .Select(x => command with { SeedChips = x })
+                .Select(x => this.Calc(x))
+                .OrderByDescending(x => x.DamageTarget[command.DamageTarget].Dps)
+                .First();
+
         public CalculationResult Calc(CalculationCommand command)
         {
             var modifications = this.CalcModifications(command);
@@ -62,9 +71,14 @@ namespace SCHelper.Services.Impl
                 HitTime: 0,
                 CoollingTime: 0,
                 FireRange: command.Weapon.FireRange * multipliers[ModificationType.FireRange],
-                FireSpread: command.Weapon.FireSpread * multipliers[ModificationType.FireSpread],
-                ProjectiveSpeed: command.Weapon.ProjectiveSpeed * multipliers[ModificationType.ProjectiveSpeed],
-                DecreaseHullResistance: command.Weapon.DecreaseHullResistance + multipliers[ModificationType.DecreaseResistance]);
+                FireSpread: command.Weapon.FireSpread.HasValue
+                    ? command.Weapon.FireSpread.Value * multipliers[ModificationType.FireSpread]
+                    : null,
+                ProjectiveSpeed: command.Weapon.ProjectiveSpeed.HasValue
+                    ? command.Weapon.ProjectiveSpeed.Value * multipliers[ModificationType.ProjectiveSpeed]
+                    : null,
+                DecreaseResistance: command.Weapon.DecreaseResistance + multipliers[ModificationType.DecreaseResistance],
+                SeedChips: command.SeedChips);
         }
 
         public Dictionary<ModificationType, IEnumerable<double>> CalcModifications(CalculationCommand command)
@@ -77,7 +91,7 @@ namespace SCHelper.Services.Impl
                 {
                     [ModificationType.CriticalChance] = command.Weapon.CriticalChance,
                     [ModificationType.CriticalDamage] = command.Weapon.CriticalDamage,
-                    [ModificationType.DecreaseResistance] = command.Weapon.DecreaseHullResistance,
+                    [ModificationType.DecreaseResistance] = command.Weapon.DecreaseResistance,
                 })
                 .SelectMany(x => x)
                 .GroupBy(x => x.Key)

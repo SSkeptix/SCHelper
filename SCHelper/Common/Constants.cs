@@ -81,7 +81,7 @@ namespace SCHelper
                     HitTime = 11,
                     CoollingTime = 2,
                     FireRange = 3000,
-                    DecreaseHullResistance = 80
+                    DecreaseResistance = 80
                 },
                 new WeaponConfigModel
                 {

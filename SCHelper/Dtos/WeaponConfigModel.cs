@@ -11,8 +11,8 @@
         public double HitTime { get; set; }
         public double CoollingTime { get; set; }
         public double FireRange { get; set; }
-        public double FireSpread { get; set; }
-        public double ProjectiveSpeed { get; set; }
-        public double DecreaseHullResistance { get; set; }
+        public double? FireSpread { get; set; }
+        public double? ProjectiveSpeed { get; set; }
+        public double DecreaseResistance { get; set; }
     }
 }
