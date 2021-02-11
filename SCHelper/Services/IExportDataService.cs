@@ -1,5 +1,4 @@
-﻿using SCHelper.Dtos;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace SCHelper.Services
 {
