@@ -33,6 +33,7 @@ namespace SCHelper
                 .AddSingleton<IConversionService, ConversionService>()
                 .AddSingleton<IDataProvider, DataProvider>()
                 .AddSingleton<IExportDataService, ExportDataService>()
+                .AddSingleton<IFileReader, FileReader>()
                 .AddSingleton<Startup, Startup>()
                 .Configure<ConfigModel>(configuration)
                 .AddLogging(loggingBuilder => loggingBuilder

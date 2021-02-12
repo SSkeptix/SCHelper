@@ -10,12 +10,15 @@ namespace SCHelper.Services.Impl
     {
         private readonly ConfigModel config;
         private readonly IConversionService conversionService;
+        private readonly IFileReader fileReader;
 
         public DataProvider(IOptions<ConfigModel> configModel,
-            IConversionService conversionService)
+            IConversionService conversionService,
+            IFileReader fileReader)
         {
             this.config = configModel.Value;
             this.conversionService = conversionService;
+            this.fileReader = fileReader;
         }
 
         public Weapon[] GetWeapons()
@@ -31,7 +34,12 @@ namespace SCHelper.Services.Impl
                 .ToArray();
 
         public SeedChip[] GetSeedChips()
-            => (config.SeedChips ?? Array.Empty<SeedChipConfigModel>())
+            => (config.SeedChips
+                    ?? (config.SeedChipsFilePath != null 
+                        ? this.fileReader.ReadSeedChips(config.SeedChipsFilePath)
+                        : null)
+                    ?? Array.Empty<SeedChipConfigModel>()
+                )
                 .Where(x => x != null)
                 .Select(x => this.conversionService.ToDomainModel(x))
                 .ToArray();

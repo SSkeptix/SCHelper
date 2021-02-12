@@ -13,5 +13,7 @@ namespace SCHelper.Dtos
         public WeaponConfigModel[] Weapons { get; set; }
 
         public SeedChipConfigModel[] SeedChips { get; set; }
+
+        public string SeedChipsFilePath { get; set; }
     }
 }
