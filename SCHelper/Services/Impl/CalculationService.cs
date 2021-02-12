@@ -18,16 +18,16 @@ namespace SCHelper.Services.Impl
                 max: max
             );
 
-        public CalculationResult CalcBestDps(CalculationCommand command)
+        public CalculationResult Calc(CalculationCommand command)
             => Utils.GetAllCombinations(
                     data: command.SeedChips.Where(x => x.Level <= command.Ship.Level).ToArray(),
                     count: command.Ship.MaxChipCount)
                 .Select(x => command with { SeedChips = x })
-                .Select(x => this.Calc(x))
+                .Select(x => this.CalcDps(x))
                 .OrderByDescending(x => x.DamageTarget[command.DamageTarget].Dps)
                 .First();
 
-        public CalculationResult Calc(CalculationCommand command)
+        public CalculationResult CalcDps(CalculationCommand command)
         {
             var modifications = this.CalcModifications(command);
             var multipliers = this.CalcMultipliers(modifications);
