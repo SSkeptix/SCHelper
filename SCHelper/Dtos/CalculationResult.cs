@@ -22,7 +22,8 @@ namespace SCHelper.Dtos
         double Damage,
         double CriticalDamage,
         double Dps,
-        double DpsWithHit);
+        double DpsWithHit,
+        double DpsWithResistance);
 
     public static class DamageDescriptionExtension
     {
@@ -31,6 +32,7 @@ namespace SCHelper.Dtos
                 Damage: source.Damage * multiplier,
                 CriticalDamage: source.CriticalDamage * multiplier,
                 Dps: source.Dps * multiplier,
-                DpsWithHit: source.DpsWithHit * multiplier);
+                DpsWithHit: source.DpsWithHit * multiplier,
+                DpsWithResistance: source.DpsWithResistance * multiplier);
     }
 }

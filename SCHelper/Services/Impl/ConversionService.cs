@@ -29,7 +29,7 @@ namespace SCHelper.Services.Impl
                 FireRange: weapon.FireRange,
                 FireSpread: weapon.FireSpread,
                 ProjectiveSpeed: weapon.ProjectiveSpeed,
-                DecreaseResistance: Math.Abs(weapon.DecreaseResistance)
+                DecreaseResistance: Math.Abs(weapon.DecreaseResistance) / 100
             );
 
         public SeedChip ToDomainModel(SeedChipConfigModel seedChip)
@@ -47,7 +47,7 @@ namespace SCHelper.Services.Impl
                     switch (x.Key)
                     {
                         case ModificationType.DecreaseResistance:
-                            return Math.Abs(x.Value ?? 0);
+                            return Math.Abs(x.Value ?? 0) / 100;
                         default:
                             return (x.Value ?? 0) / 100;
                     }

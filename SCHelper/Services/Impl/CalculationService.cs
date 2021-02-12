@@ -49,7 +49,8 @@ namespace SCHelper.Services.Impl
                 Damage: damage,
                 CriticalDamage: damage * (1 + multipliers[ModificationType.CriticalDamage]),
                 Dps: dps,
-                DpsWithHit: 0);
+                DpsWithHit: 0,
+                DpsWithResistance: dps * (1 + multipliers[ModificationType.DecreaseResistance]));
             var destroyerDamageDescription = damageDescription.Multiply(multipliers[ModificationType.DestroyerDamage]);
 
             return new CalculationResult(
