@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using SCHelper.Dtos;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace SCHelper.Services.Impl
@@ -22,13 +21,23 @@ namespace SCHelper.Services.Impl
         }
 
         public Weapon[] GetWeapons()
-            => (config.Weapons ?? Array.Empty<WeaponConfigModel>())
+            => (config.Weapons
+                    ?? (config.WeaponsFilePath != null
+                        ? this.fileReader.Read<WeaponConfigModel>(config.WeaponsFilePath)
+                        : null)
+                    ?? Array.Empty<WeaponConfigModel>()
+                )
                 .Where(x => x != null)
                 .Select(x => this.conversionService.ToDomainModel(x))
                 .ToArray();
 
         public Ship[] GetShips()
-            => (config.Ships ?? Array.Empty<ShipConfigModel>())
+            => (config.Ships
+                    ?? (config.ShipsFilePath != null
+                        ? this.fileReader.Read<ShipConfigModel>(config.ShipsFilePath)
+                        : null)
+                    ?? Array.Empty<ShipConfigModel>()
+                )
                 .Where(x => x != null)
                 .Select(x => this.conversionService.ToDomainModel(x))
                 .ToArray();
@@ -57,10 +66,12 @@ namespace SCHelper.Services.Impl
                     Ship: cmd.Ship != null
                         ? this.conversionService.ToDomainModel(cmd.Ship)
                         : ships.FirstOrDefault(x => x.Name == cmd.ShipName),
-                    Weapon: cmd.Weapon != null
-                        ? this.conversionService.ToDomainModel(cmd.Weapon)
-                        : weapons.FirstOrDefault(x => x.Name == cmd.WeaponName),
-                    SeedChips: cmd.SeedChips
+                    Weapon: weapons.FirstOrDefault(x => x.Name == cmd.WeaponName),
+                    SeedChips: (cmd.SeedChips
+                            ?? (cmd.SeedChipsFilePath != null
+                                ? this.fileReader.Read<SeedChipConfigModel>(cmd.SeedChipsFilePath)
+                                : null)
+                        )
                         ?.Where(x => x != null)
                         .Select(x => this.conversionService.ToDomainModel(x))
                         .ToArray()

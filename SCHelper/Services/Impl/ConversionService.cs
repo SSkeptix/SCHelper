@@ -68,7 +68,7 @@ namespace SCHelper.Services.Impl
             {
                 Parameters = data.Parameters
                     .Where(x => x.Value != 0)
-                    .ToDictionary(x => x.Key, x => x.Value)
+                    .ToDictionary(x => x.Key, x => x.Value * 100)
             };
     }
 }
