@@ -13,6 +13,8 @@ namespace SCHelper.Dtos
 
         public DamageTarget? DamageTarget { get; set; }
 
+        public double? EnemyResistance { get; set; }
+
         public Dictionary<ModificationType, double?> Implants { get; set; }
         public Dictionary<ModificationType, double?> Modules { get; set; }
         public SeedChipConfigModel[] SeedChips { get; set; }

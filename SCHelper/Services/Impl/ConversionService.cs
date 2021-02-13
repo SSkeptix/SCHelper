@@ -58,6 +58,7 @@ namespace SCHelper.Services.Impl
             {
                 FireRate = 60 * data.FireRate,
                 CriticalChance = 100 * data.CriticalChance,
+                DecreaseResistance = 100 * data.DecreaseResistance,
                 SeedChips = data.SeedChips
                     .Select(x => this.ToUserDataModel(x))
                     .ToArray()

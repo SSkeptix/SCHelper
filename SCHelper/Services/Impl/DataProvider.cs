@@ -63,6 +63,7 @@ namespace SCHelper.Services.Impl
                 .Select(cmd => new CalculationCommand(
                     Name: cmd.Name,
                     DamageTarget: cmd.DamageTarget ?? DamageTarget.Normal,
+                    EnemyResistance: cmd.EnemyResistance ?? 0,
                     Ship: cmd.Ship != null
                         ? this.conversionService.ToDomainModel(cmd.Ship)
                         : ships.FirstOrDefault(x => x.Name == cmd.ShipName),
