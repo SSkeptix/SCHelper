@@ -36,7 +36,7 @@ namespace SCHelper.Services.Impl
         public SeedChip[] GetSeedChips()
             => (config.SeedChips
                     ?? (config.SeedChipsFilePath != null 
-                        ? this.fileReader.ReadSeedChips(config.SeedChipsFilePath)
+                        ? this.fileReader.Read<SeedChipConfigModel>(config.SeedChipsFilePath)
                         : null)
                     ?? Array.Empty<SeedChipConfigModel>()
                 )

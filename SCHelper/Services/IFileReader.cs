@@ -1,9 +1,7 @@
-﻿using SCHelper.Dtos;
-
-namespace SCHelper.Services
+﻿namespace SCHelper.Services
 {
     public interface IFileReader
     {
-        SeedChipConfigModel[] ReadSeedChips(string filePath);
+        T[] Read<T>(string filePath) where T : class, new();
     }
 }
