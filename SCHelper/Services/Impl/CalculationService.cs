@@ -45,11 +45,14 @@ namespace SCHelper.Services.Impl
             var fireRate = command.Weapon.FireRate * multipliers[ModificationType.FireRate];
             var dps = damage * fireRate * (1 + multipliers[ModificationType.CriticalChance] * multipliers[ModificationType.CriticalDamage]);
 
+            var hitTime = command.Weapon.HitTime / multipliers[ModificationType.WeaponHitSpeed];
+            var coollingTime = command.Weapon.CoolingTime / multipliers[ModificationType.WeaponCoolingSpeed];
+
             var damageDescription = new DamageDescription(
                 Damage: damage,
                 CriticalDamage: damage * (1 + multipliers[ModificationType.CriticalDamage]),
                 Dps: dps,
-                DpsWithHit: 0,
+                DpsWithHit: dps * hitTime / (hitTime + coollingTime),
                 DpsWithResistance: dps * (1 + multipliers[ModificationType.DecreaseResistance]));
             var destroyerDamageDescription = damageDescription.Multiply(multipliers[ModificationType.DestroyerDamage]);
 
@@ -69,8 +72,8 @@ namespace SCHelper.Services.Impl
                 DamageType: command.Weapon.DamageType,
                 FireRate: fireRate,
                 CriticalChance: multipliers[ModificationType.CriticalChance],
-                HitTime: 0,
-                CoollingTime: 0,
+                HitTime: hitTime,
+                CoollingTime: coollingTime,
                 FireRange: command.Weapon.FireRange * multipliers[ModificationType.FireRange],
                 FireSpread: command.Weapon.FireSpread.HasValue
                     ? command.Weapon.FireSpread.Value * multipliers[ModificationType.FireSpread]
@@ -78,7 +81,7 @@ namespace SCHelper.Services.Impl
                 ProjectiveSpeed: command.Weapon.ProjectiveSpeed.HasValue
                     ? command.Weapon.ProjectiveSpeed.Value * multipliers[ModificationType.ProjectiveSpeed]
                     : null,
-                DecreaseResistance: command.Weapon.DecreaseResistance + multipliers[ModificationType.DecreaseResistance],
+                DecreaseResistance: multipliers[ModificationType.DecreaseResistance],
                 SeedChips: command.SeedChips);
         }
 
@@ -120,10 +123,12 @@ namespace SCHelper.Services.Impl
                         case ModificationType.FireRange:
                         case ModificationType.FireSpread:
                         case ModificationType.ProjectiveSpeed:
-                        case ModificationType.WeaponHitSpeed:
                         case ModificationType.WeaponCoolingSpeed:
                         case ModificationType.ModuleReloadingSpeed:
                             return this.CalcMultiplier(x.Value);
+
+                        case ModificationType.WeaponHitSpeed:
+                            return this.CalcMultiplier(x.Value.Concat(modifications[ModificationType.FireRate]));
 
                         case ModificationType.FireRate:
                             return this.CalcMultiplier(x.Value, min: 0, max: 10);
