@@ -8,7 +8,7 @@
         double CriticalChance,
         double CriticalDamage,
         double HitTime,
-        double CoollingTime,
+        double CoolingTime,
         double FireRange,
         double? FireSpread,
         double? ProjectiveSpeed,

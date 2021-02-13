@@ -1,4 +1,5 @@
 ﻿using CsvHelper;
+using CsvHelper.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -21,10 +22,11 @@ namespace SCHelper.Services.Impl
             where T : class, new()
         {
             var props = CsvFileReader.GetProperties<T>();
-
             var records = new List<T>();
+
+            var configuration = new CsvConfiguration(CultureInfo.CurrentCulture) { MissingFieldFound = null };
             using (var streamReader = new StreamReader(filePath))
-            using (var csvReader = new CsvReader(streamReader, CultureInfo.InvariantCulture))
+            using (var csvReader = new CsvReader(streamReader, configuration))
             {
                 csvReader.Read();
                 csvReader.ReadHeader();
@@ -55,14 +57,14 @@ namespace SCHelper.Services.Impl
                 .Select(x => new PropertyDescription(
                     Name: x.Name,
                     Type: x.FieldType,
-                    SetValue: new Action<object?, object?>((item, value) => x.SetValue(item, value))
+                    SetValue: new Action<object, object>((item, value) => x.SetValue(item, value))
                 ));
             var props = type.GetProperties(BindingFlags.Instance | BindingFlags.Public)
                 .Where(x => x.CanRead && x.CanWrite)
                 .Select(x => new PropertyDescription(
                     Name: x.Name,
                     Type: x.PropertyType,
-                    SetValue: new Action<object?, object?>((item, value) => x.SetValue(item, value))
+                    SetValue: new Action<object, object>((item, value) => x.SetValue(item, value))
                 ));
             return fields.Concat(props).ToArray();
         }
@@ -70,20 +72,20 @@ namespace SCHelper.Services.Impl
         private record PropertyDescription(
             string Name,
             Type Type,
-            Action<object?, object?> SetValue);
+            Action<object, object> SetValue);
     }
 
     public interface ITypeHandler
     {
         Type Type { get; }
-        object? Read(CsvReader reader, string propertyName);
+        object Read(CsvReader reader, string propertyName);
     }
 
     public abstract class TypeHandler<T> : ITypeHandler
     {
         public Type Type { get; } = typeof(T);
 
-        public object? Read(CsvReader reader, string propertyName)
+        public object Read(CsvReader reader, string propertyName)
             => this.ReadItem(reader, propertyName);
 
         public abstract T ReadItem(CsvReader reader, string propertyName);

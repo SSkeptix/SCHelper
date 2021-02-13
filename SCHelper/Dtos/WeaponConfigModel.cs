@@ -9,10 +9,10 @@
         public double CriticalChance { get; set; }
         public double CriticalDamage { get; set; }
         public double HitTime { get; set; }
-        public double CoollingTime { get; set; }
+        public double CoolingTime { get; set; }
         public double FireRange { get; set; }
         public double? FireSpread { get; set; }
         public double? ProjectiveSpeed { get; set; }
-        public double DecreaseResistance { get; set; }
+        public double? DecreaseResistance { get; set; }
     }
 }

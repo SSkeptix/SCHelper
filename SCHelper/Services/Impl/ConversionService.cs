@@ -25,11 +25,11 @@ namespace SCHelper.Services.Impl
                 CriticalChance: weapon.CriticalChance / 100,
                 CriticalDamage: weapon.CriticalDamage / 100,
                 HitTime: weapon.HitTime,
-                CoollingTime: weapon.CoollingTime,
+                CoolingTime: weapon.CoolingTime,
                 FireRange: weapon.FireRange,
                 FireSpread: weapon.FireSpread,
                 ProjectiveSpeed: weapon.ProjectiveSpeed,
-                DecreaseResistance: Math.Abs(weapon.DecreaseResistance) / 100
+                DecreaseResistance: Math.Abs(weapon.DecreaseResistance ?? 0) / 100
             );
 
         public SeedChip ToDomainModel(SeedChipConfigModel seedChip)

@@ -1,0 +1,3 @@
+﻿Name,Level,WeaponCount,MaxChipCount,Damage,CriticalChance,CriticalDamage,WeaponHitSpeed,WeaponCoolingSpeed,FireSpread,ProjectiveSpeed,ModuleReloadingSpeed
+Berserker,15,2,5,7,25,,,,,,
+Jaguar,15,4,5,10,,,,,,,
