@@ -7,17 +7,6 @@ namespace SCHelper.Services.Impl
 {
     public class CalculationService : ICalculationService
     {
-        public double CalcMod(double x) => x < 0 ? x / (1 + x) : x;
-        public double CalcVal(double x) => x < 0 ? 1 / (1 - x) : 1 + x;
-        public double CutOverflow(double value, double min = double.MinValue, double max = double.MaxValue)
-            => Math.Min(max, Math.Max(min, value));
-        public double CalcMultiplier(IEnumerable<double> modifications, double min = double.MinValue, double max = double.MaxValue)
-            => this.CutOverflow(
-                value: this.CalcVal(modifications.Select(this.CalcMod).Sum()),
-                min: min,
-                max: max
-            );
-
         public CalculationResult Calc(CalculationCommand command)
             => Utils.GetAllCombinations(
                     data: command.SeedChips.Where(x => x.Level <= command.Ship.Level).ToArray(),
@@ -147,5 +136,16 @@ namespace SCHelper.Services.Impl
                     };
                 });
         }
+
+        public double CalcMod(double x) => x < 0 ? x / (1 + x) : x;
+        public double CalcVal(double x) => x < 0 ? 1 / (1 - x) : 1 + x;
+        public double CutOverflow(double value, double min = double.MinValue, double max = double.MaxValue)
+            => Math.Min(max, Math.Max(min, value));
+        public double CalcMultiplier(IEnumerable<double> modifications, double min = double.MinValue, double max = double.MaxValue)
+            => this.CutOverflow(
+                value: this.CalcVal(modifications.Select(this.CalcMod).Sum()),
+                min: min,
+                max: max
+            );
     }
 }
