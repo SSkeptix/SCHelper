@@ -5,13 +5,12 @@ using SCHelper.Dtos;
 using SCHelper.Services;
 using SCHelper.Services.Impl;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace SCHelper
 {
     public class Program
     {
-        public static Task Main(string[] args)
+        public static void Main(string[] args)
         {
             var configuration = new ConfigurationBuilder()
                 .AddJsonFile(Constants.ConfigFilePath, true, true)
@@ -20,9 +19,10 @@ namespace SCHelper
             using (var serviceProvider = GetServiceProvider(configuration))
             {
                 var startup = serviceProvider.GetService<Startup>();
-                return File.Exists(Constants.ConfigFilePath)
-                    ? startup.Execute()
-                    : startup.GenerateDocumentation();
+                if (File.Exists(Constants.ConfigFilePath))
+                    startup.Execute();
+                else
+                    startup.GenerateDocumentation();
             };
         }
 

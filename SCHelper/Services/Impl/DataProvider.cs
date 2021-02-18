@@ -28,30 +28,30 @@ namespace SCHelper.Services.Impl
                     ?? Array.Empty<WeaponConfigModel>()
                 )
                 .Where(x => x != null)
-                .Select(x => this.conversionService.ToDomainModel(x))
+                .Select(x => x.ToDomainModel())
                 .ToArray();
 
         public Ship[] GetShips()
-            => (config.Ships
-                    ?? (config.ShipsFilePath != null
-                        ? this.fileReader.Read<ShipConfigModel>(config.ShipsFilePath)
-                        : null)
-                    ?? Array.Empty<ShipConfigModel>()
-                )
-                .Where(x => x != null)
-                .Select(x => this.conversionService.ToDomainModel(x))
-                .ToArray();
+            => this.config.Ships
+                ?.Where(x => x != null)
+                .Select(x => x.ToDomainModel())
+                .ToArray()
+            ?? (this.config.ShipsFilePath != null ? this.fileReader.Read<ShipCsvModel>(config.ShipsFilePath) : null)
+                ?.Where(x => x != null)
+                .Select(x => x.ToDomainModel())
+                .ToArray()
+            ?? Array.Empty<Ship>();
 
         public SeedChip[] GetSeedChips()
-            => (config.SeedChips
-                    ?? (config.SeedChipsFilePath != null 
-                        ? this.fileReader.Read<SeedChipConfigModel>(config.SeedChipsFilePath)
-                        : null)
-                    ?? Array.Empty<SeedChipConfigModel>()
-                )
-                .Where(x => x != null)
-                .Select(x => this.conversionService.ToDomainModel(x))
-                .ToArray();
+            => this.config.SeedChips
+                ?.Where(x => x != null)
+                .Select(x => x.ToDomainModel())
+                .ToArray()
+            ?? (this.config.SeedChipsFilePath != null ? this.fileReader.Read<SeedChipCsvModel>(config.SeedChipsFilePath) : null)
+                ?.Where(x => x != null)
+                .Select(x => x.ToDomainModel())
+                .ToArray()
+            ?? Array.Empty<SeedChip>();
 
         public CalculationCommand[] GetCalculationCommands()
         {
@@ -64,24 +64,23 @@ namespace SCHelper.Services.Impl
                     Name: cmd.Name,
                     DamageTarget: cmd.DamageTarget ?? DamageTarget.Normal,
                     EnemyResistance: cmd.EnemyResistance ?? 0,
-                    Ship: cmd.Ship != null
-                        ? this.conversionService.ToDomainModel(cmd.Ship)
-                        : ships.FirstOrDefault(x => x.Name == cmd.ShipName),
+                    Ship: cmd.Ship?.ToDomainModel()
+                        ?? ships.FirstOrDefault(x => x.Name == cmd.ShipName),
                     Weapon: weapons.FirstOrDefault(x => x.Name == cmd.WeaponName),
-                    SeedChips: (cmd.SeedChips
-                            ?? (cmd.SeedChipsFilePath != null
-                                ? this.fileReader.Read<SeedChipConfigModel>(cmd.SeedChipsFilePath)
-                                : null)
-                        )
-                        ?.Where(x => x != null)
-                        .Select(x => this.conversionService.ToDomainModel(x))
-                        .ToArray()
+                    SeedChips: 
+                        cmd.SeedChips
+                            ?.Where(x => x != null)
+                            .Select(x => x.ToDomainModel())
+                            .ToArray()
+                        ?? (cmd.SeedChipsFilePath != null ? this.fileReader.Read<SeedChipCsvModel>(cmd.SeedChipsFilePath) : null)
+                            ?.Where(x => x != null)
+                            .Select(x => x.ToDomainModel())
+                            .ToArray()
                         ?? seedChips,
-                    Implants: this.conversionService.ToDomainModel(cmd.Implants ?? Utils.GetEmptyDictionary<ModificationType, double?>()),
-                    Modules: this.conversionService.ToDomainModel(cmd.Modules ?? Utils.GetEmptyDictionary<ModificationType, double?>())
+                    Implants: (cmd.Implants ?? Utils.GetEmptyDictionary<ModificationType, double?>()).ToDomainModel(),
+                    Modules: (cmd.Modules ?? Utils.GetEmptyDictionary<ModificationType, double?>()).ToDomainModel()
                 ))
                 .ToArray();
         }
-
     }
 }

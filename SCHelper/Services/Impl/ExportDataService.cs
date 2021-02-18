@@ -1,18 +1,18 @@
-﻿using Microsoft.Extensions.Options;
-using SCHelper.Dtos;
+﻿using CsvHelper;
+using CsvHelper.Configuration;
 using System;
+using System.Globalization;
 using System.IO;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Unicode;
-using System.Threading.Tasks;
 
 namespace SCHelper.Services.Impl
 {
     public class ExportDataService : IExportDataService
     {
-        public Task Export(string filePath, object data)
+        public void ExportJson(string filePath, object data)
         {
             var serializationOptions = new JsonSerializerOptions()
             {
@@ -25,7 +25,17 @@ namespace SCHelper.Services.Impl
             serializationOptions.Converters.Add(new DoubleConverter());
 
             var jsonData = JsonSerializer.Serialize(data, serializationOptions);
-            return File.WriteAllTextAsync(filePath, jsonData);
+            File.WriteAllText(filePath, jsonData);
+        }
+
+        public void ExportCsv(string filePath, object[] data)
+        {
+            var configuration = new CsvConfiguration(CultureInfo.CurrentCulture) { MissingFieldFound = null };
+            using (var writer = new StreamWriter(filePath))
+            using (var csv = new CsvWriter(writer, configuration))
+            {
+                csv.WriteRecords(data);
+            }
         }
     }
 

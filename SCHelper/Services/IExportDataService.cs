@@ -1,9 +1,8 @@
-﻿using System.Threading.Tasks;
-
-namespace SCHelper.Services
+﻿namespace SCHelper.Services
 {
     public interface IExportDataService
     {
-        Task Export(string filePath, object data);
+        void ExportJson(string filePath, object data);
+        void ExportCsv(string filePath, object[] data);
     }
 }

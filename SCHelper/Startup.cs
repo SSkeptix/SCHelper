@@ -4,7 +4,6 @@ using SCHelper.Dtos;
 using SCHelper.Services;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace SCHelper
 {
@@ -33,11 +32,16 @@ namespace SCHelper
             this.config = configModel.Value;
         }
 
-        //TODO: Add ReadMe.txt file generation
-        public Task GenerateDocumentation()
-            => this.exportDataService.Export(Constants.ConfigFilePath, Constants.DefaultConfigModel);
+        public void GenerateDocumentation()
+        {
+            this.exportDataService.ExportJson(Constants.ConfigFilePath, SampleData.AppSettings);
+            this.exportDataService.ExportCsv(SampleData.AppSettings.ShipsFilePath, SampleData.ShipCsvModels);
+            this.exportDataService.ExportCsv(SampleData.AppSettings.WeaponsFilePath, SampleData.WeaponConfigModels);
+            this.exportDataService.ExportCsv(SampleData.AppSettings.SeedChipsFilePath, SampleData.SeedChipCsvModels);
+            //TODO: Add ReadMe.txt file generation
+        }
 
-        public Task Execute()
+        public void Execute()
         {
             var calculationCommands = this.dataProvider.GetCalculationCommands();
 
@@ -65,7 +69,7 @@ namespace SCHelper
                     }
                 })
                 .ToArray();
-            return this.exportDataService.Export(config.OutputFile, userData);
+            this.exportDataService.ExportJson(config.OutputFile, userData);
         }
     }
 }
