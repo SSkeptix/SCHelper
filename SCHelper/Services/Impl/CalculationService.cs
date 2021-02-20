@@ -32,14 +32,20 @@ namespace SCHelper.Services.Impl
                     _ => throw new NotImplementedException()
                 };
             var fireRate = command.Weapon.FireRate * multipliers[ModificationType.FireRate];
-            var dps = damage * fireRate * (1 + multipliers[ModificationType.CriticalChance] * multipliers[ModificationType.CriticalDamage]);
+            var criticalDamageDpsMultiplier = command.Weapon.CriticalChance.HasValue
+                ? (1 + multipliers[ModificationType.CriticalChance] * multipliers[ModificationType.CriticalDamage])
+                : 1;
+            var criticalDamageMultiplier = command.Weapon.CriticalChance.HasValue
+                ? (1 + multipliers[ModificationType.CriticalDamage])
+                : 1;
+            var dps = damage * fireRate * criticalDamageDpsMultiplier;
 
             var hitTime = command.Weapon.HitTime / multipliers[ModificationType.WeaponHitSpeed];
             var coollingTime = command.Weapon.CoolingTime / multipliers[ModificationType.WeaponCoolingSpeed];
 
             var damageDescription = new DamageDescription(
                 Damage: damage,
-                CriticalDamage: damage * (1 + multipliers[ModificationType.CriticalDamage]),
+                CriticalDamage: damage * criticalDamageMultiplier,
                 Dps: dps,
                 DpsWithHit: dps * hitTime / (hitTime + coollingTime),
                 DpsWithResistance: dps * (1 + multipliers[ModificationType.DecreaseResistance] - command.EnemyResistance));
@@ -82,8 +88,8 @@ namespace SCHelper.Services.Impl
                 .Append(command.Modules)
                 .Append(new Dictionary<ModificationType, double>
                 {
-                    [ModificationType.CriticalChance] = command.Weapon.CriticalChance,
-                    [ModificationType.CriticalDamage] = command.Weapon.CriticalDamage,
+                    [ModificationType.CriticalChance] = command.Weapon.CriticalChance ?? 0,
+                    [ModificationType.CriticalDamage] = command.Weapon.CriticalDamage ?? 0,
                     [ModificationType.DecreaseResistance] = command.Weapon.DecreaseResistance,
                 })
                 .SelectMany(x => x)

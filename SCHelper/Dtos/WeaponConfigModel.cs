@@ -8,8 +8,8 @@ namespace SCHelper.Dtos
         public DamageType DamageType { get; set; }
         public double Damage { get; set; }
         public double FireRate { get; set; }
-        public double CriticalChance { get; set; }
-        public double CriticalDamage { get; set; }
+        public double? CriticalChance { get; set; }
+        public double? CriticalDamage { get; set; }
         public double HitTime { get; set; }
         public double CoolingTime { get; set; }
         public double FireRange { get; set; }
