@@ -12,8 +12,6 @@ namespace SCHelper.Dtos
         public double? Damage { get; set; }
         public double? CriticalChance { get; set; }
         public double? CriticalDamage { get; set; }
-        public double? FireRate { get; set; }
-        public double? FireRange { get; set; }
         public double? FireSpread { get; set; }
         public double? ProjectiveSpeed { get; set; }
         public double? WeaponHitSpeed { get; set; }
@@ -34,8 +32,6 @@ namespace SCHelper.Dtos
                     [ModificationType.Damage] = data.Damage,
                     [ModificationType.CriticalDamage] = data.CriticalDamage,
                     [ModificationType.CriticalChance] = data.CriticalChance,
-                    [ModificationType.FireRate] = data.FireRate,
-                    [ModificationType.FireRange] = data.FireRange,
                     [ModificationType.FireSpread] = data.FireSpread,
                     [ModificationType.ProjectiveSpeed] = data.ProjectiveSpeed,
                     [ModificationType.WeaponHitSpeed] = data.WeaponHitSpeed,
@@ -57,8 +53,6 @@ namespace SCHelper.Dtos
                 Damage = bonuces[ModificationType.Damage],
                 CriticalChance = bonuces[ModificationType.CriticalChance],
                 CriticalDamage = bonuces[ModificationType.CriticalDamage],
-                FireRate = bonuces[ModificationType.FireRate],
-                FireRange = bonuces[ModificationType.FireRange],
                 FireSpread = bonuces[ModificationType.FireSpread],
                 ProjectiveSpeed = bonuces[ModificationType.ProjectiveSpeed],
                 WeaponHitSpeed = bonuces[ModificationType.WeaponHitSpeed],

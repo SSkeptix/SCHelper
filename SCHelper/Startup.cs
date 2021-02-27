@@ -43,33 +43,41 @@ namespace SCHelper
 
         public void Execute()
         {
+            var seedChips = this.dataProvider.GetSeedChips().ToList();
+            var usedSeedChips = new List<SeedChip>();
             var calculationCommands = this.dataProvider.GetCalculationCommands();
 
-            object[] userData = calculationCommands
-                .Select(cmd =>
-                {
-                    var errors = new List<string>();
-                    if (cmd.Ship == null)
-                        errors.Add("There is no ship. Property Ship is null and ShipName is invalid.");
-                    if (cmd.Weapon == null)
-                        errors.Add("There is no weapon. Property Weapon is null and WeaponName is invalid.");
+            var userData = new List<object>();
+            foreach (var cmd in calculationCommands)
+            {
+                var errors = new List<string>();
+                if (cmd.Ship == null)
+                    errors.Add("There is no ship. Property Ship is null and ShipName is invalid.");
+                if (cmd.Weapon == null)
+                    errors.Add("There is no weapon. Property Weapon is null and WeaponName is invalid.");
 
-                    if (errors.Any())
+                if (errors.Any())
+                {
+                    userData.Add(new
                     {
-                        return new
-                        {
-                            Name = cmd.Name,
-                            Errors = errors.ToArray()
-                        };
-                    }
-                    else
-                    {
-                        CalculationResult result = this.calculationService.Calc(cmd);
-                        return (object)this.conversionService.ToUserDataModel(result);
-                    }
-                })
-                .ToArray();
-            this.exportDataService.ExportJson(config.OutputFile, userData);
+                        Name = cmd.Name,
+                        Errors = errors.ToArray()
+                    });
+                }
+                else
+                {
+                    var newCmd = cmd with { SeedChips = seedChips.ToArray() };
+                    CalculationResult result = this.calculationService.Calc(newCmd);
+                    foreach (var seedChip in result.SeedChips)
+                        seedChips.Remove(seedChip);
+                    usedSeedChips.AddRange(result.SeedChips);
+
+                    var userResult = this.conversionService.ToUserDataModel(result);
+                    userData.Add(userResult);
+                }
+            }
+
+            this.exportDataService.ExportJson(config.OutputFile, userData.ToArray());
         }
     }
 }

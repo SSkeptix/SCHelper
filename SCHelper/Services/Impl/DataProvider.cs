@@ -75,8 +75,7 @@ namespace SCHelper.Services.Impl
                         ?? (cmd.SeedChipsFilePath != null ? this.fileReader.Read<SeedChipCsvModel>(cmd.SeedChipsFilePath) : null)
                             ?.Where(x => x != null)
                             .Select(x => x.ToDomainModel())
-                            .ToArray()
-                        ?? seedChips,
+                            .ToArray(),
                     Implants: (cmd.Implants ?? Utils.GetEmptyDictionary<ModificationType, double?>()).ToDomainModel(),
                     Modules: (cmd.Modules ?? Utils.GetEmptyDictionary<ModificationType, double?>()).ToDomainModel()
                 ))
