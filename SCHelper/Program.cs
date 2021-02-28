@@ -2,8 +2,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SCHelper.Dtos;
+using SCHelper.Exceptions;
 using SCHelper.Services;
 using SCHelper.Services.Impl;
+using System;
 using System.IO;
 
 namespace SCHelper
@@ -18,11 +20,19 @@ namespace SCHelper
 
             using (var serviceProvider = GetServiceProvider(configuration))
             {
-                var startup = serviceProvider.GetService<Startup>();
-                if (File.Exists(Constants.ConfigFilePath))
-                    startup.Execute();
-                else
-                    startup.GenerateDocumentation();
+                try
+                {
+                    var startup = serviceProvider.GetRequiredService<Startup>();
+                    if (File.Exists(Constants.ConfigFilePath))
+                        startup.Execute();
+                    else
+                        startup.GenerateDocumentation();
+                }
+                catch (Exception ex)
+                {
+                    var logger = serviceProvider.GetRequiredService<ILogger>();
+                    logger.LogError(ex.Message);
+                }
             };
         }
 

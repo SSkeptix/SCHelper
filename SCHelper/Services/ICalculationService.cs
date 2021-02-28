@@ -4,6 +4,6 @@ namespace SCHelper.Services
 {
     public interface ICalculationService
     {
-        CalculationResult Calc(CalculationCommand command);
+        CalculationResult Calc(CalculationCommand command, SeedChip[] seedChips);
     }
 }

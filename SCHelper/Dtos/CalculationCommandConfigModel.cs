@@ -17,7 +17,5 @@ namespace SCHelper.Dtos
 
         public Dictionary<ModificationType, double?> Implants { get; set; }
         public Dictionary<ModificationType, double?> Modules { get; set; }
-        public SeedChipConfigModel[] SeedChips { get; set; }
-        public string SeedChipsFilePath { get; set; }
     }
 }

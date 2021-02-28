@@ -7,18 +7,17 @@ namespace SCHelper.Services.Impl
 {
     public class CalculationService : ICalculationService
     {
-        public CalculationResult Calc(CalculationCommand command)
+        public CalculationResult Calc(CalculationCommand command, SeedChip[] seedChips)
             => Utils.GetAllCombinations(
-                    data: command.SeedChips.Where(x => x.Level <= command.Ship.Level).ToArray(),
+                    data: seedChips.Where(x => x.Level <= command.Ship.Level).ToArray(),
                     count: command.Ship.MaxChipCount)
-                .Select(x => command with { SeedChips = x })
-                .Select(x => this.CalcDps(x))
+                .Select(seedChips => this.CalcDps(command, seedChips))
                 .OrderByDescending(x => x.DamageTarget[command.DamageTarget].Dps)
                 .First();
 
-        public CalculationResult CalcDps(CalculationCommand command)
+        public CalculationResult CalcDps(CalculationCommand command, SeedChip[] seedChips)
         {
-            var modifications = this.CalcModifications(command);
+            var modifications = this.CalcModifications(command, seedChips);
             var multipliers = this.CalcMultipliers(modifications);
 
             var damage = command.Ship.WeaponCount *
@@ -77,12 +76,12 @@ namespace SCHelper.Services.Impl
                     ? command.Weapon.ProjectiveSpeed.Value * multipliers[ModificationType.ProjectiveSpeed]
                     : null,
                 DecreaseResistance: multipliers[ModificationType.DecreaseResistance],
-                SeedChips: command.SeedChips);
+                SeedChips: seedChips);
         }
 
-        public Dictionary<ModificationType, IEnumerable<double>> CalcModifications(CalculationCommand command)
+        public Dictionary<ModificationType, IEnumerable<double>> CalcModifications(CalculationCommand command, SeedChip[] seedChips)
         {
-            return command.SeedChips.Select(x => x.Parameters)
+            return seedChips.Select(x => x.Parameters)
                 .Append(command.Ship.Bonuses)
                 .Append(command.Implants)
                 .Append(command.Modules)

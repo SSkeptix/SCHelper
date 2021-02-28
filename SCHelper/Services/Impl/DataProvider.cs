@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using SCHelper.Dtos;
+using SCHelper.Exceptions;
 using System;
 using System.Linq;
 
@@ -57,7 +58,6 @@ namespace SCHelper.Services.Impl
         {
             var ships = this.GetShips();
             var weapons = this.GetWeapons();
-            var seedChips = this.GetSeedChips();
 
             return (config.Calculate ?? Array.Empty<CalculationCommandConfigModel>())
                 .Select(cmd => new CalculationCommand(
@@ -65,17 +65,10 @@ namespace SCHelper.Services.Impl
                     DamageTarget: cmd.DamageTarget ?? DamageTarget.Normal,
                     EnemyResistance: cmd.EnemyResistance ?? 0,
                     Ship: cmd.Ship?.ToDomainModel()
-                        ?? ships.FirstOrDefault(x => x.Name == cmd.ShipName),
-                    Weapon: weapons.FirstOrDefault(x => x.Name == cmd.WeaponName),
-                    SeedChips: 
-                        cmd.SeedChips
-                            ?.Where(x => x != null)
-                            .Select(x => x.ToDomainModel())
-                            .ToArray()
-                        ?? (cmd.SeedChipsFilePath != null ? this.fileReader.Read<SeedChipCsvModel>(cmd.SeedChipsFilePath) : null)
-                            ?.Where(x => x != null)
-                            .Select(x => x.ToDomainModel())
-                            .ToArray(),
+                        ?? ships.FirstOrDefault(x => x.Name == cmd.ShipName)
+                        ?? throw new DataValidationException($"There are no ship for command. Ship name: '{cmd.ShipName}'"),
+                    Weapon: weapons.FirstOrDefault(x => x.Name == cmd.WeaponName)
+                        ?? throw new DataValidationException($"There are no weapon for command. Weapon name: '{cmd.WeaponName}'"),
                     Implants: (cmd.Implants ?? Utils.GetEmptyDictionary<ModificationType, double?>()).ToDomainModel(),
                     Modules: (cmd.Modules ?? Utils.GetEmptyDictionary<ModificationType, double?>()).ToDomainModel()
                 ))

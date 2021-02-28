@@ -50,31 +50,13 @@ namespace SCHelper
             var userData = new List<object>();
             foreach (var cmd in calculationCommands)
             {
-                var errors = new List<string>();
-                if (cmd.Ship == null)
-                    errors.Add("There is no ship. Property Ship is null and ShipName is invalid.");
-                if (cmd.Weapon == null)
-                    errors.Add("There is no weapon. Property Weapon is null and WeaponName is invalid.");
+                CalculationResult result = this.calculationService.Calc(cmd, seedChips.ToArray());
+                foreach (var seedChip in result.SeedChips)
+                    seedChips.Remove(seedChip);
+                usedSeedChips.AddRange(result.SeedChips);
 
-                if (errors.Any())
-                {
-                    userData.Add(new
-                    {
-                        Name = cmd.Name,
-                        Errors = errors.ToArray()
-                    });
-                }
-                else
-                {
-                    var newCmd = cmd with { SeedChips = seedChips.ToArray() };
-                    CalculationResult result = this.calculationService.Calc(newCmd);
-                    foreach (var seedChip in result.SeedChips)
-                        seedChips.Remove(seedChip);
-                    usedSeedChips.AddRange(result.SeedChips);
-
-                    var userResult = this.conversionService.ToUserDataModel(result);
-                    userData.Add(userResult);
-                }
+                var userResult = this.conversionService.ToUserDataModel(result);
+                userData.Add(userResult);
             }
 
             this.exportDataService.ExportJson(config.OutputFile, userData.ToArray());
