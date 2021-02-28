@@ -7,9 +7,35 @@ namespace SCHelper.Services.Impl
 {
     public class CalculationService : ICalculationService
     {
-        public CalculationResult Calc(CalculationCommand command, SeedChip[] seedChips)
+        public CalculationResult[] Calc(IEnumerable<CalculationCommand> commands, IEnumerable<SeedChip> seedChips)
+        {
+            var commandsList = commands.ToList();
+            var seedChipsList = seedChips.ToList();
+            var usedSeedChips = new List<SeedChip>();
+
+            var results = new List<CalculationResult>();
+            foreach (var cmd in commandsList)
+            {
+                CalculationResult result = this.CalcBestChips(cmd, seedChipsList.ToArray());
+                foreach (var seedChip in result.SeedChips)
+                    seedChipsList.Remove(seedChip);
+                usedSeedChips.AddRange(result.SeedChips);
+                results.Add(result);
+            }
+
+            return results.ToArray();
+        }
+
+        public CalculationResult CalcBestChips(CalculationCommand command, SeedChip[] seedChips)
             => Utils.GetAllCombinations(
-                    data: seedChips.Where(x => x.Level <= command.Ship.Level).ToArray(),
+                    data: seedChips
+                        .Where(x => x.Level <= command.Ship.Level
+                            && (command.Weapon.CriticalChance.HasValue || x.Parameters[ModificationType.CriticalChance] >= 0)
+                            && (command.Weapon.CriticalDamage.HasValue || x.Parameters[ModificationType.CriticalDamage] >= 0)
+                            && (command.Weapon.FireSpread.HasValue || x.Parameters[ModificationType.FireSpread] >= 0)
+                            && (command.Weapon.ProjectiveSpeed.HasValue || x.Parameters[ModificationType.ProjectiveSpeed] >= 0)
+                        )
+                        .ToArray(),
                     count: command.Ship.MaxChipCount)
                 .Select(seedChips => this.CalcDps(command, seedChips))
                 .OrderByDescending(x => x.DamageTarget[command.DamageTarget].Dps)

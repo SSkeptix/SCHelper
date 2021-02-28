@@ -47,19 +47,11 @@ namespace SCHelper
             var usedSeedChips = new List<SeedChip>();
             var calculationCommands = this.dataProvider.GetCalculationCommands();
 
-            var userData = new List<object>();
-            foreach (var cmd in calculationCommands)
-            {
-                CalculationResult result = this.calculationService.Calc(cmd, seedChips.ToArray());
-                foreach (var seedChip in result.SeedChips)
-                    seedChips.Remove(seedChip);
-                usedSeedChips.AddRange(result.SeedChips);
+            var results = this.calculationService.Calc(calculationCommands, seedChips)
+                .Select(x => this.conversionService.ToUserDataModel(x))
+                .ToArray();
 
-                var userResult = this.conversionService.ToUserDataModel(result);
-                userData.Add(userResult);
-            }
-
-            this.exportDataService.ExportJson(config.OutputFile, userData.ToArray());
+            this.exportDataService.ExportJson(config.OutputFile, results);
         }
     }
 }
