@@ -1,18 +1,20 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 using SCHelper.Dtos;
 using SCHelper.Exceptions;
 using SCHelper.Services;
 using SCHelper.Services.Impl;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace SCHelper
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var configuration = new ConfigurationBuilder()
                 .AddJsonFile(Constants.ConfigFilePath, true, true)
@@ -24,13 +26,13 @@ namespace SCHelper
                 {
                     var startup = serviceProvider.GetRequiredService<Startup>();
                     if (File.Exists(Constants.ConfigFilePath))
-                        startup.Execute();
+                        await startup.Execute();
                     else
                         startup.GenerateDocumentation();
                 }
                 catch (Exception ex)
                 {
-                    var logger = serviceProvider.GetRequiredService<ILogger>();
+                    var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
                     logger.LogError(ex.Message);
                 }
             };
@@ -48,7 +50,10 @@ namespace SCHelper
                 .Configure<ConfigModel>(configuration)
                 .AddLogging(loggingBuilder => loggingBuilder
                     .ClearProviders()
-                    .AddConsole()
+                    .AddSimpleConsole(configure =>
+                    {
+                        configure.SingleLine = true;
+                    })
                     .SetMinimumLevel(LogLevel.Trace))
                 .BuildServiceProvider();
         }

@@ -4,6 +4,7 @@ using SCHelper.Dtos;
 using SCHelper.Services;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace SCHelper
 {
@@ -41,13 +42,13 @@ namespace SCHelper
             //TODO: Add ReadMe.txt file generation
         }
 
-        public void Execute()
+        public async Task Execute()
         {
             var seedChips = this.dataProvider.GetSeedChips().ToList();
             var usedSeedChips = new List<SeedChip>();
             var calculationCommands = this.dataProvider.GetCalculationCommands();
 
-            var results = this.calculationService.Calc(calculationCommands, seedChips)
+            var results = (await this.calculationService.Calc(calculationCommands, seedChips))
                 .Select(x => this.conversionService.ToUserDataModel(x))
                 .ToArray();
 

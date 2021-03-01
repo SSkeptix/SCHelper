@@ -1,45 +1,76 @@
-﻿using SCHelper.Dtos;
+﻿using Microsoft.Extensions.Logging;
+using SCHelper.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace SCHelper.Services.Impl
 {
     public class CalculationService : ICalculationService
     {
-        public CalculationResult[] Calc(IEnumerable<CalculationCommand> commands, IEnumerable<SeedChip> seedChips)
+        private readonly ILogger<CalculationService> logger;
+
+        public CalculationService(ILogger<CalculationService> logger)
         {
-            var commandsList = commands.ToList();
-            var seedChipsList = seedChips.ToList();
-            var usedSeedChips = new List<SeedChip>();
-
-            var results = new List<CalculationResult>();
-            foreach (var cmd in commandsList)
-            {
-                CalculationResult result = this.CalcBestChips(cmd, seedChipsList.ToArray());
-                foreach (var seedChip in result.SeedChips)
-                    seedChipsList.Remove(seedChip);
-                usedSeedChips.AddRange(result.SeedChips);
-                results.Add(result);
-            }
-
-            return results.ToArray();
+            this.logger = logger;
         }
 
-        public CalculationResult CalcBestChips(CalculationCommand command, SeedChip[] seedChips)
-            => Utils.GetAllCombinations(
-                    data: seedChips
-                        .Where(x => x.Level <= command.Ship.Level
-                            && (command.Weapon.CriticalChance.HasValue || x.Parameters[ModificationType.CriticalChance] >= 0)
-                            && (command.Weapon.CriticalDamage.HasValue || x.Parameters[ModificationType.CriticalDamage] >= 0)
-                            && (command.Weapon.FireSpread.HasValue || x.Parameters[ModificationType.FireSpread] >= 0)
-                            && (command.Weapon.ProjectiveSpeed.HasValue || x.Parameters[ModificationType.ProjectiveSpeed] >= 0)
-                        )
-                        .ToArray(),
-                    count: command.Ship.MaxChipCount)
-                .Select(seedChips => this.CalcDps(command, seedChips))
-                .OrderByDescending(x => x.DamageTarget[command.DamageTarget].Dps)
-                .First();
+        public Task<CalculationResult[]> Calc(IEnumerable<CalculationCommand> commands, IEnumerable<SeedChip> seedChips)
+        {
+            string trackShipName = "Initialization";
+            int trackIter = -1;
+            int trackIterCount = -1;
+
+            var logProgress = new Action(() => this.logger.LogInformation($"{trackShipName} - {trackIter} / {trackIterCount}"));
+
+            var calcTask = Task.Run(() =>
+            {
+                var commandsList = commands.ToList();
+                var seedChipsList = seedChips.ToList();
+                var usedSeedChips = new List<SeedChip>();
+
+                var results = new List<CalculationResult>();
+                foreach (var cmd in commandsList)
+                {
+                    var seedChipCombinations = Utils.GetAllCombinations(
+                            data: seedChips
+                                .Where(x => x.Level <= cmd.Ship.Level
+                                    && (cmd.Weapon.CriticalChance.HasValue || x.Parameters[ModificationType.CriticalChance] >= 0)
+                                    && (cmd.Weapon.CriticalDamage.HasValue || x.Parameters[ModificationType.CriticalDamage] >= 0)
+                                    && (cmd.Weapon.FireSpread.HasValue || x.Parameters[ModificationType.FireSpread] >= 0)
+                                    && (cmd.Weapon.ProjectiveSpeed.HasValue || x.Parameters[ModificationType.ProjectiveSpeed] >= 0)
+                                )
+                                .ToArray(),
+                            count: cmd.Ship.MaxChipCount)
+                        .ToArray();
+
+                    trackShipName = cmd.Ship.Name;
+                    trackIter = 0;
+                    trackIterCount = seedChipCombinations.Length;
+                    logProgress();
+
+                    CalculationResult result = seedChipCombinations
+                        .Select((seedChips, iter) =>
+                        {
+                            trackIter = iter;
+                            return this.CalcDps(cmd, seedChips);
+                        })
+                        .OrderByDescending(x => x.DamageTarget[cmd.DamageTarget].Dps)
+                        .First();
+
+                    foreach (var seedChip in result.SeedChips)
+                        seedChipsList.Remove(seedChip);
+                    usedSeedChips.AddRange(result.SeedChips);
+                    results.Add(result);
+
+                    logProgress();
+                }
+                return results.ToArray();
+            });
+
+            return Utils.RepeatOnBackground(calcTask, logProgress, TimeSpan.FromSeconds(1));
+        }
 
         public CalculationResult CalcDps(CalculationCommand command, SeedChip[] seedChips)
         {

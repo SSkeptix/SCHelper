@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SCHelper
 {
@@ -50,6 +52,24 @@ namespace SCHelper
                     }
                 }
             }
+        }
+
+        public static async Task<T> RepeatOnBackground<T>(Task<T> mainTask, Action repetitiveAction, TimeSpan actionDelay)
+        {
+            var backgroundTokenSource = new CancellationTokenSource();
+            var backgroundTask = Task.Run(async () =>
+            {
+                while (true)
+                {
+                    repetitiveAction();
+                    await Task.Delay(actionDelay);
+                }
+            }, backgroundTokenSource.Token);
+
+            await mainTask;
+            backgroundTokenSource.Cancel();
+
+            return mainTask.Result;
         }
     }
 }
