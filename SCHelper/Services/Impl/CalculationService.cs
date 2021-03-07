@@ -36,10 +36,10 @@ namespace SCHelper.Services.Impl
                     var seedChipCombinations = Utils.GetAllCombinations(
                             data: seedChips
                                 .Where(x => x.Level <= cmd.Ship.Level
-                                    && (cmd.Weapon.CriticalChance.HasValue || x.Parameters[ModificationType.CriticalChance] >= 0)
-                                    && (cmd.Weapon.CriticalDamage.HasValue || x.Parameters[ModificationType.CriticalDamage] >= 0)
-                                    && (cmd.Weapon.FireSpread.HasValue || x.Parameters[ModificationType.FireSpread] >= 0)
-                                    && (cmd.Weapon.ProjectiveSpeed.HasValue || x.Parameters[ModificationType.ProjectiveSpeed] >= 0)
+                                    && (cmd.Weapon.CriticalChance.HasValue || x.Parameters.GetValueOrDefault(ModificationType.CriticalChance) >= 0)
+                                    && (cmd.Weapon.CriticalDamage.HasValue || x.Parameters.GetValueOrDefault(ModificationType.CriticalDamage) >= 0)
+                                    && (cmd.Weapon.FireSpread.HasValue || x.Parameters.GetValueOrDefault(ModificationType.FireSpread) >= 0)
+                                    && (cmd.Weapon.ProjectiveSpeed.HasValue || x.Parameters.GetValueOrDefault(ModificationType.ProjectiveSpeed) >= 0)
                                 )
                                 .ToArray(),
                             count: cmd.Ship.MaxChipCount)
@@ -54,7 +54,7 @@ namespace SCHelper.Services.Impl
                         .Select((seedChips, iter) =>
                         {
                             trackIter = iter;
-                            return this.CalcDps(cmd, seedChips);
+                            return CalcDps(cmd, seedChips);
                         })
                         .OrderByDescending(x => x.DamageTarget[cmd.DamageTarget].Dps)
                         .First();
@@ -72,10 +72,10 @@ namespace SCHelper.Services.Impl
             return Utils.RepeatOnBackground(calcTask, logProgress, TimeSpan.FromSeconds(1));
         }
 
-        public CalculationResult CalcDps(CalculationCommand command, SeedChip[] seedChips)
+        public static CalculationResult CalcDps(CalculationCommand command, SeedChip[] seedChips)
         {
-            var modifications = this.CalcModifications(command, seedChips);
-            var multipliers = this.CalcMultipliers(modifications);
+            var modifications = CalcModifications(command, seedChips);
+            var multipliers = CalcMultipliers(modifications);
 
             var damage = command.Ship.WeaponCount *
                 command.Weapon.Damage *
@@ -136,76 +136,62 @@ namespace SCHelper.Services.Impl
                 SeedChips: seedChips);
         }
 
-        public Dictionary<ModificationType, IEnumerable<double>> CalcModifications(CalculationCommand command, SeedChip[] seedChips)
-        {
-            return seedChips.Select(x => x.Parameters)
-                .Append(command.Ship.Bonuses)
-                .Append(command.Implants)
-                .Append(command.Modules)
-                .Append(new Dictionary<ModificationType, double>
+        public static Dictionary<ModificationType, IEnumerable<double>> CalcModifications(CalculationCommand command, SeedChip[] seedChips)
+            => seedChips.Select(x => x.Parameters)
+            .Append(command.Ship.Bonuses)
+            .Append(command.Implants)
+            .Append(command.Modules)
+            .Append(new Dictionary<ModificationType, double>
+            {
+                [ModificationType.CriticalChance] = command.Weapon.CriticalChance ?? 0,
+                [ModificationType.CriticalDamage] = command.Weapon.CriticalDamage ?? 0,
+                [ModificationType.DecreaseResistance] = command.Weapon.DecreaseResistance,
+            })
+            .SelectMany(x => x)
+            .GroupBy(x => x.Key)
+            .ToDictionary(x => x.Key, x => x.Select(y => y.Value).Where(x => x != 0));
+
+        public static Dictionary<ModificationType, double> CalcMultipliers(Dictionary<ModificationType, IEnumerable<double>> modifications)
+            => Utils.GetEmptyDictionary<ModificationType, double>()
+            .Override(modifications.ToDictionary(x => x.Key,
+                x => x.Key switch
                 {
-                    [ModificationType.CriticalChance] = command.Weapon.CriticalChance ?? 0,
-                    [ModificationType.CriticalDamage] = command.Weapon.CriticalDamage ?? 0,
-                    [ModificationType.DecreaseResistance] = command.Weapon.DecreaseResistance,
+                    ModificationType.Damage
+                        => 1,
+                    ModificationType.KineticDamage
+                    or ModificationType.TermalDamage
+                    or ModificationType.ElectromagneticDamage
+                        => CalcMultiplier(x.Value.Concat(modifications[ModificationType.Damage])),
+                    ModificationType.DestroyerDamage
+                    or ModificationType.AlienDamage
+                    or ModificationType.ElidiumDamage
+                    or ModificationType.FireRange
+                    or ModificationType.FireSpread
+                    or ModificationType.ProjectiveSpeed
+                    or ModificationType.WeaponCoolingSpeed
+                    or ModificationType.ModuleReloadingSpeed
+                        => CalcMultiplier(x.Value),
+                    ModificationType.WeaponHitSpeed
+                        => CalcMultiplier(x.Value.Concat(modifications[ModificationType.FireRate])),
+                    ModificationType.FireRate
+                        => CalcMultiplier(x.Value, min: 0, max: 10),
+                    ModificationType.CriticalChance
+                        => CalcMultiplier(x.Value, min: 1, max: 2) - 1,
+                    ModificationType.CriticalDamage
+                        => CalcMultiplier(x.Value, min: 1) - 1,
+                    ModificationType.DecreaseResistance
+                        => x.Value.Sum(),
+                    _ => throw new NotImplementedException()
                 })
-                .SelectMany(x => x)
-                .GroupBy(x => x.Key)
-                .ToDictionary(x => x.Key, x => x.Select(y => y.Value).Where(x => x != 0));
-        }
+            );
 
-        public Dictionary<ModificationType, double> CalcMultipliers(Dictionary<ModificationType, IEnumerable<double>> modifications)
-        {
-            return modifications.ToDictionary(x => x.Key,
-                x =>
-                {
-                    switch (x.Key)
-                    {
-                        case ModificationType.Damage:
-                            return 1;
-
-                        case ModificationType.KineticDamage:
-                        case ModificationType.TermalDamage:
-                        case ModificationType.ElectromagneticDamage:
-                            return this.CalcMultiplier(x.Value.Concat(modifications[ModificationType.Damage]));
-
-                        case ModificationType.DestroyerDamage:
-                        case ModificationType.AlienDamage:
-                        case ModificationType.ElidiumDamage:
-                        case ModificationType.FireRange:
-                        case ModificationType.FireSpread:
-                        case ModificationType.ProjectiveSpeed:
-                        case ModificationType.WeaponCoolingSpeed:
-                        case ModificationType.ModuleReloadingSpeed:
-                            return this.CalcMultiplier(x.Value);
-
-                        case ModificationType.WeaponHitSpeed:
-                            return this.CalcMultiplier(x.Value.Concat(modifications[ModificationType.FireRate]));
-
-                        case ModificationType.FireRate:
-                            return this.CalcMultiplier(x.Value, min: 0, max: 10);
-
-                        case ModificationType.CriticalChance:
-                            return this.CalcMultiplier(x.Value, min: 1, max: 2) - 1;
-
-                        case ModificationType.CriticalDamage:
-                            return this.CalcMultiplier(x.Value, min: 1) - 1;
-
-                        case ModificationType.DecreaseResistance:
-                            return x.Value.Sum();
-
-                        default:
-                            throw new NotImplementedException();
-                    };
-                });
-        }
-
-        public double CalcMod(double x) => x < 0 ? x / (1 + x) : x;
-        public double CalcVal(double x) => x < 0 ? 1 / (1 - x) : 1 + x;
-        public double CutOverflow(double value, double min = double.MinValue, double max = double.MaxValue)
+        public static double CalcMod(double x) => x < 0 ? x / (1 + x) : x;
+        public static double CalcVal(double x) => x < 0 ? 1 / (1 - x) : 1 + x;
+        public static double CutOverflow(double value, double min = double.MinValue, double max = double.MaxValue)
             => Math.Min(max, Math.Max(min, value));
-        public double CalcMultiplier(IEnumerable<double> modifications, double min = double.MinValue, double max = double.MaxValue)
-            => this.CutOverflow(
-                value: this.CalcVal(modifications.Select(this.CalcMod).Sum()),
+        public static double CalcMultiplier(IEnumerable<double> modifications, double min = double.MinValue, double max = double.MaxValue)
+            => CutOverflow(
+                value: CalcVal(modifications.Select(CalcMod).Sum()),
                 min: min,
                 max: max
             );
