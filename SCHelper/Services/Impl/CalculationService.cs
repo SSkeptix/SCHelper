@@ -87,7 +87,7 @@ namespace SCHelper.Services.Impl
                     DamageType.Termal => multipliers[ModificationType.TermalDamage],
                     _ => throw new NotImplementedException()
                 };
-            var fireRate = command.Weapon.FireRate * multipliers[ModificationType.FireRate];
+            var fireRate = CutOverflow(command.Weapon.FireRate * multipliers[ModificationType.FireRate], 0, 10);
             var criticalDamageDpsMultiplier = command.Weapon.CriticalChance.HasValue
                 ? (1 + multipliers[ModificationType.CriticalChance] * multipliers[ModificationType.CriticalDamage])
                 : 1;
