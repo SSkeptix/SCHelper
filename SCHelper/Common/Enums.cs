@@ -32,8 +32,8 @@
         FireRange,
         FireSpread,
         ProjectiveSpeed,
-        WeaponHitSpeed,
-        WeaponCoolingSpeed,
+        HitTime,
+        CoolingTime,
         DecreaseResistance,
         ModuleReloadingSpeed,
     }

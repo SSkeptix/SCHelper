@@ -1,4 +1,4 @@
-﻿Name,Level,WeaponCount,MaxChipCount,Damage,CriticalChance,CriticalDamage,WeaponHitSpeed,WeaponCoolingSpeed,FireSpread,ProjectiveSpeed,ModuleReloadingSpeed
+﻿Name,Level,WeaponCount,MaxChipCount,Damage,CriticalChance,CriticalDamage,HitTime,CoolingTime,FireSpread,ProjectiveSpeed,ModuleReloadingSpeed
 Berserker,15,2,5,7,25,,,,,,
 Jaguar,15,4,5,10,,,,,,,
 Hammerhead,17,4,5,,10,,,,,,

@@ -12,7 +12,7 @@ namespace SCHelper
         {
             [ModificationType.Damage] = -18.5,
             [ModificationType.ElectromagneticDamage] = 78,
-            [ModificationType.WeaponHitSpeed] = -46.8,
+            [ModificationType.HitTime] = -46.8,
             [ModificationType.CriticalChance] = 14.6,
             [ModificationType.FireRate] = 92,
         };
@@ -222,7 +222,7 @@ namespace SCHelper
                 {
                     [ModificationType.FireRate] = 92,
                     [ModificationType.Damage] = -18.5,
-                    [ModificationType.WeaponHitSpeed] = -46.8,
+                    [ModificationType.HitTime] = -46.8,
                     [ModificationType.ElectromagneticDamage] = 78,
                     [ModificationType.CriticalChance] = 14.6,
                 }
@@ -247,7 +247,7 @@ namespace SCHelper
                     [ModificationType.FireRate] = 78,
                     [ModificationType.Damage]= -19.2,
                     [ModificationType.FireSpread] = -32.9,
-                    [ModificationType.WeaponCoolingSpeed ]= 75,
+                    [ModificationType.CoolingTime ]= 75,
                 }
             },
             new SeedChipConfigModel
@@ -266,7 +266,7 @@ namespace SCHelper
                 Level = 13,
                 Parameters = new()
                 {
-                    [ModificationType.WeaponHitSpeed] = -61,
+                    [ModificationType.HitTime] = -61,
                     [ModificationType.ElectromagneticDamage] = 56,
                     [ModificationType.Damage] = 59,
                 }
@@ -301,7 +301,7 @@ namespace SCHelper
                 Parameters = new()
                 {
                     [ModificationType.CriticalChance] = 23.2,
-                    [ModificationType.WeaponHitSpeed] = -31,
+                    [ModificationType.HitTime] = -31,
                     [ModificationType.Damage] = 66,
                     [ModificationType.CriticalDamage] = 35.2,
                 }

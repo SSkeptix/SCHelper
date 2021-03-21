@@ -20,8 +20,8 @@ namespace SCHelper.Dtos
         public double? FireRange { get; set; }
         public double? FireSpread { get; set; }
         public double? ProjectiveSpeed { get; set; }
-        public double? WeaponHitSpeed { get; set; }
-        public double? WeaponCoolingSpeed { get; set; }
+        public double? HitTime { get; set; }
+        public double? CoolingTime { get; set; }
         public double? DecreaseResistance { get; set; }
         public double? ModuleReloadingSpeed { get; set; }
     }
@@ -47,8 +47,8 @@ namespace SCHelper.Dtos
                     [ModificationType.FireRange] = data.FireRange,
                     [ModificationType.FireSpread] = data.FireSpread,
                     [ModificationType.ProjectiveSpeed] = data.ProjectiveSpeed,
-                    [ModificationType.WeaponHitSpeed] = data.WeaponHitSpeed,
-                    [ModificationType.WeaponCoolingSpeed] = data.WeaponCoolingSpeed,
+                    [ModificationType.HitTime] = data.HitTime,
+                    [ModificationType.CoolingTime] = data.CoolingTime,
                     [ModificationType.DecreaseResistance] = data.DecreaseResistance,
                     [ModificationType.ModuleReloadingSpeed] = data.ModuleReloadingSpeed,
                 }.ToDomainModel()
@@ -74,8 +74,8 @@ namespace SCHelper.Dtos
                 FireRange = parameters[ModificationType.FireRange],
                 FireSpread = parameters[ModificationType.FireSpread],
                 ProjectiveSpeed = parameters[ModificationType.ProjectiveSpeed],
-                WeaponHitSpeed = parameters[ModificationType.WeaponHitSpeed],
-                WeaponCoolingSpeed = parameters[ModificationType.WeaponCoolingSpeed],
+                HitTime = parameters[ModificationType.HitTime],
+                CoolingTime = parameters[ModificationType.CoolingTime],
                 DecreaseResistance = parameters[ModificationType.DecreaseResistance],
                 ModuleReloadingSpeed = parameters[ModificationType.ModuleReloadingSpeed],
             };

@@ -96,8 +96,8 @@ namespace SCHelper.Services.Impl
                 : 1;
             var dps = damage * fireRate * criticalDamageDpsMultiplier;
 
-            var hitTime = command.Weapon.HitTime / multipliers[ModificationType.WeaponHitSpeed];
-            var coollingTime = command.Weapon.CoolingTime / multipliers[ModificationType.WeaponCoolingSpeed];
+            var hitTime = command.Weapon.HitTime * multipliers[ModificationType.HitTime];
+            var coollingTime = command.Weapon.CoolingTime * multipliers[ModificationType.CoolingTime];
 
             var damageDescription = new DamageDescription(
                 Damage: damage,
@@ -168,11 +168,12 @@ namespace SCHelper.Services.Impl
                     or ModificationType.FireRange
                     or ModificationType.FireSpread
                     or ModificationType.ProjectiveSpeed
-                    or ModificationType.WeaponCoolingSpeed
                     or ModificationType.ModuleReloadingSpeed
                         => CalcMultiplier(x.Value),
-                    ModificationType.WeaponHitSpeed
-                        => CalcMultiplier(x.Value.Concat(modifications[ModificationType.FireRate])),
+                    ModificationType.CoolingTime
+                        => 1 / CalcMultiplier(x.Value.Select(x => -x)),
+                    ModificationType.HitTime
+                        => 1 / CalcMultiplier(x.Value.Concat(modifications[ModificationType.FireRate])),
                     ModificationType.FireRate
                         => CalcMultiplier(x.Value, min: 0, max: 10),
                     ModificationType.CriticalChance
