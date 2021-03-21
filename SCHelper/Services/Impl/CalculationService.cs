@@ -34,7 +34,7 @@ namespace SCHelper.Services.Impl
                 foreach (var cmd in commandsList)
                 {
                     var seedChipCombinations = Utils.GetAllCombinations(
-                            data: seedChips
+                            data: seedChipsList
                                 .Where(x => x.Level <= cmd.Ship.Level
                                     && (cmd.Weapon.CriticalChance.HasValue || x.Parameters.GetValueOrDefault(ModificationType.CriticalChance) >= 0)
                                     && (cmd.Weapon.CriticalDamage.HasValue || x.Parameters.GetValueOrDefault(ModificationType.CriticalDamage) >= 0)
