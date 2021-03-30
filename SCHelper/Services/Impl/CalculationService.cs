@@ -50,9 +50,10 @@ namespace SCHelper.Services.Impl
                     logProgress();
 
                     CalculationResult result = seedChipCombinations
-                        .Select((seedChips, iter) =>
+                        .AsParallel()
+                        .Select(seedChips =>
                         {
-                            trackIter = iter;
+                            trackIter++;
                             return CalcDps(cmd, seedChips);
                         })
                         .OrderByDescending(x => x.DamageTarget[cmd.DamageTarget].Dps)

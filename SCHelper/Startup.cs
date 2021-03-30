@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using SCHelper.Dtos;
 using SCHelper.Services;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -44,6 +45,9 @@ namespace SCHelper
 
         public async Task Execute()
         {
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+
             var seedChips = this.dataProvider.GetSeedChips();
             var calculationCommands = this.dataProvider.GetCalculationCommands();
 
@@ -52,6 +56,9 @@ namespace SCHelper
                 .ToArray();
 
             this.exportDataService.ExportJson(config.OutputFile, results);
+
+            stopWatch.Stop();
+            this.logger.LogInformation($"Total time spend: {stopWatch.Elapsed}");
         }
     }
 }
