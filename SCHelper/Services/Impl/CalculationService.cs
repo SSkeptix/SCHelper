@@ -165,14 +165,15 @@ namespace SCHelper.Services.Impl
                     or ModificationType.AlienDamage
                     or ModificationType.ElidiumDamage
                     or ModificationType.FireRange
-                    or ModificationType.FireSpread
                     or ModificationType.ProjectiveSpeed
-                    or ModificationType.ModuleReloadingSpeed
                         => CalcMultiplier(x.Value),
+                    ModificationType.FireSpread
+                    or ModificationType.ModuleReloadingSpeed
+                        => CalcMultiplier(x.Value.Select(x => -x)),
                     ModificationType.CoolingTime
-                        => 1 / CalcMultiplier(x.Value.Select(x => -x)),
+                        => 1 / CalcMultiplier(x.Value),
                     ModificationType.HitTime
-                        => 1 / CalcMultiplier(x.Value.Concat(modifications[ModificationType.FireRate])),
+                        => 1 / CalcMultiplier(x.Value.Select(x => -x).Concat(modifications[ModificationType.FireRate])),
                     ModificationType.FireRate
                         => CalcMultiplier(x.Value, min: 0, max: 10),
                     ModificationType.CriticalChance
