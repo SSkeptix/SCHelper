@@ -16,7 +16,7 @@ namespace SCHelper.Services.Impl
             this.logger = logger;
         }
 
-        public Task<CalculationResult[]> Calc(IEnumerable<CalculationCommand> commands, IEnumerable<SeedChip> seedChips)
+        public Task<CalculationResult[]> Calc(CalculationCommand[] commands, SeedChip[] seedChips)
         {
             string trackShipName = "Initialization";
             int trackIter = -1;
@@ -26,12 +26,11 @@ namespace SCHelper.Services.Impl
 
             var calcTask = Task.Run(() =>
             {
-                var commandsList = commands.ToList();
                 var seedChipsList = seedChips.ToList();
                 var usedSeedChips = new List<SeedChip>();
 
                 var results = new List<CalculationResult>();
-                foreach (var cmd in commandsList)
+                foreach (var cmd in commands)
                 {
                     var seedChipCombinations = Utils.GetAllCombinations(
                             data: seedChipsList

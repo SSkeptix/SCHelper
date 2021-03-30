@@ -6,6 +6,6 @@ namespace SCHelper.Services
 {
     public interface ICalculationService
     {
-        Task<CalculationResult[]> Calc(IEnumerable<CalculationCommand> commands, IEnumerable<SeedChip> seedChips);
+        Task<CalculationResult[]> Calc(CalculationCommand[] commands, SeedChip[] seedChips);
     }
 }

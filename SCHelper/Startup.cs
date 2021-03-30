@@ -44,7 +44,7 @@ namespace SCHelper
 
         public async Task Execute()
         {
-            var seedChips = this.dataProvider.GetSeedChips().ToList();
+            var seedChips = this.dataProvider.GetSeedChips();
             var calculationCommands = this.dataProvider.GetCalculationCommands();
 
             var results = (await this.calculationService.Calc(calculationCommands, seedChips))

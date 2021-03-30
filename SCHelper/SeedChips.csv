@@ -1,4 +1,4 @@
-Name,Level,Damage,KineticDamage,TermalDamage,ElectromagneticDamage,DestroyerDamage,AlienDamage,ElidiumDamage,CriticalChance,CriticalDamage,FireRate,HitTime,CoolingTime,FireRange,FireSpread,ProjectiveSpeed,ModuleReloadingSpeed,DecreaseResistance
+﻿Name,Level,Damage,KineticDamage,TermalDamage,ElectromagneticDamage,DestroyerDamage,AlienDamage,ElidiumDamage,CriticalChance,CriticalDamage,FireRate,HitTime,CoolingTime,FireRange,FireSpread,ProjectiveSpeed,ModuleReloadingSpeed,DecreaseResistance
 (Berserker) Подталкивающий чип молнии 15,15,-18.5,,,78,,,,14.6,,92,-46.8,,,,,,
 (Berserker) Таранний чип вспишки 13,13,,,,56,,,,9.4,49.3,,,,,,,,
 (Hammerhead) Подталкивающий чип Вознесения 13,13,-19.2,,,,,,,,,78,,-75,,-32.9,,,
