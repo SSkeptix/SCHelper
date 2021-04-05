@@ -24,6 +24,8 @@ namespace SCHelper.Services.Impl
 
             var logProgress = new Action(() => this.logger.LogInformation($"{trackShipName} - {trackIter} / {trackIterCount}"));
 
+            var allScores = new List<(SeedChip chip, double score)>();
+
             var calcTask = Task.Run(() =>
             {
                 var seedChipsList = seedChips.ToList();
@@ -32,15 +34,9 @@ namespace SCHelper.Services.Impl
                 var results = new List<CalculationResult>();
                 foreach (var cmd in commands)
                 {
+                    var suitableSeedChips = GetSuitableSeedChips(cmd, seedChipsList);
                     var seedChipCombinations = Utils.GetAllCombinations(
-                            data: seedChipsList
-                                .Where(x => x.Level <= cmd.Ship.Level
-                                    && (cmd.Weapon.CriticalChance.HasValue || x.Parameters.GetValueOrDefault(ModificationType.CriticalChance) >= 0)
-                                    && (cmd.Weapon.CriticalDamage.HasValue || x.Parameters.GetValueOrDefault(ModificationType.CriticalDamage) >= 0)
-                                    && (cmd.Weapon.FireSpread.HasValue || x.Parameters.GetValueOrDefault(ModificationType.FireSpread) >= 0)
-                                    && (cmd.Weapon.ProjectiveSpeed.HasValue || x.Parameters.GetValueOrDefault(ModificationType.ProjectiveSpeed) >= 0)
-                                )
-                                .ToArray(),
+                            data: suitableSeedChips,
                             count: cmd.Ship.MaxChipCount)
                         .ToArray();
 
@@ -48,6 +44,19 @@ namespace SCHelper.Services.Impl
                     trackIter = 0;
                     trackIterCount = seedChipCombinations.Length;
                     logProgress();
+
+
+
+                    var scores = CalcChipScore(cmd, seedChips);
+                    var maxScore = scores.Max(x => x.score);
+                    scores = scores.Select(x =>
+                    {
+                        x.score /= maxScore;
+                        return x;
+                    }).ToArray();
+                    allScores.AddRange(scores);
+
+
 
                     CalculationResult result = seedChipCombinations
                         .AsParallel()
@@ -66,11 +75,42 @@ namespace SCHelper.Services.Impl
 
                     logProgress();
                 }
+
+
+
+
+                var seedChipNameLength = seedChips.Max(x => x.Name.Length);
+                var scores1 = allScores
+                    .GroupBy(x => x.chip)
+                    .Select(x => (Chip: x.Key, Score: x.Max(y => y.score)))
+                    .OrderByDescending(x => x.Score)
+                    .ToArray();
+
+                scores1.OrderByDescending(x => x.Score).ToList()
+                    .ForEach(x => this.logger.LogInformation(x.Chip.Name.PadRight(seedChipNameLength, ' ') + $": {x.Score:F2}"));
+
+                this.logger.LogInformation("===================================");
+
+                scores1.OrderBy(x => x.Chip.Name).ToList()
+                    .ForEach(x => this.logger.LogInformation(x.Chip.Name.PadRight(seedChipNameLength, ' ') + $": {x.Score:F2}"));
+
+
+
                 return results.ToArray();
             });
 
             return Utils.RepeatOnBackground(calcTask, logProgress, TimeSpan.FromSeconds(1));
         }
+
+        private static SeedChip[] GetSuitableSeedChips(CalculationCommand command, IEnumerable<SeedChip> seedChips)
+            => seedChips
+            .Where(x => x.Level <= command.Ship.Level
+                && (command.Weapon.CriticalChance.HasValue || x.Parameters.GetValueOrDefault(ModificationType.CriticalChance) >= 0)
+                && (command.Weapon.CriticalDamage.HasValue || x.Parameters.GetValueOrDefault(ModificationType.CriticalDamage) >= 0)
+                && (command.Weapon.FireSpread.HasValue || x.Parameters.GetValueOrDefault(ModificationType.FireSpread) >= 0)
+                && (command.Weapon.ProjectiveSpeed.HasValue || x.Parameters.GetValueOrDefault(ModificationType.ProjectiveSpeed) >= 0)
+            )
+            .ToArray();
 
         public static CalculationResult CalcDps(CalculationCommand command, SeedChip[] seedChips)
         {
@@ -174,7 +214,7 @@ namespace SCHelper.Services.Impl
                     ModificationType.CoolingTime
                         => 1 / CalcMultiplier(x.Value),
                     ModificationType.HitTime
-                        => 1 / CalcMultiplier(x.Value.Select(x => -x).Concat(modifications[ModificationType.FireRate])),
+                        => 1 / CalcMultiplier(x.Value.Select(x => -x).Concat(modifications.GetValueOrDefault(ModificationType.FireRate, Enumerable.Empty<double>()))),
                     ModificationType.FireRate
                         => CalcMultiplier(x.Value, min: 0, max: 10),
                     ModificationType.CriticalChance
@@ -197,5 +237,95 @@ namespace SCHelper.Services.Impl
                 min: min,
                 max: max
             );
+
+        public void CalcChipScores(CalculationCommand[] commands, SeedChip[] seedChips)
+        {
+            var seedChipNameLength = seedChips.Max(x => x.Name.Length);
+
+            var scores = commands
+                .SelectMany(command =>
+                {
+                    var scores = CalcChipScore(command, seedChips)
+                        .OrderByDescending(x => x.score)
+                        .ToArray();
+                    var maxScore = scores.Max(x => x.score);
+                    return scores.Select(x =>
+                    {
+                        x.score /= maxScore;
+                        return x;
+                    }).ToArray();
+                })
+                .GroupBy(x => x.chip)
+                .Select(x => (Chip: x.Key, Score: x.Max(y => y.score)))
+                .OrderByDescending(x => x.Score)
+                .ToArray();
+
+            scores.OrderByDescending(x => x.Score).ToList()
+                .ForEach(x => this.logger.LogInformation(x.Chip.Name.PadRight(seedChipNameLength, ' ') + $": {x.Score:F2}"));
+
+            this.logger.LogInformation("===================================");
+
+            scores.OrderBy(x => x.Chip.Name).ToList()
+                .ForEach(x => this.logger.LogInformation(x.Chip.Name.PadRight(seedChipNameLength, ' ') + $": {x.Score:F2}"));
+        }
+
+        public (SeedChip chip, double score)[] CalcChipScore(CalculationCommand command, SeedChip[] seedChips)
+        {
+            var multipliers = CalcMultipliers(CalcModifications(command, Array.Empty<SeedChip>()));
+            var fireRateMaxMutiplier = 10 / command.Weapon.FireRate - multipliers.GetValueOrDefault(ModificationType.FireRate);
+            var critChanceMaxMutiplier = 1 - multipliers.GetValueOrDefault(ModificationType.CriticalChance);
+
+            var maxMods = seedChips.Where(x => x.Parameters.All(y => y.Value >= 0))
+                .SelectMany(x => x.Parameters)
+                .GroupBy(x => x.Key)
+                .ToDictionary(x => x.Key, x => x.Max(y => y.Value));
+
+            var fileRateEfficiency = CutOverflow(
+                value: fireRateMaxMutiplier / (maxMods.GetValueOrDefault(ModificationType.FireRate, 1) * command.Ship.MaxChipCount),
+                min: 0,
+                max: 1);
+
+            var critChanceEfficiency = command.Weapon.CriticalChance.HasValue
+                ? CutOverflow(
+                    value: critChanceMaxMutiplier / (maxMods[ModificationType.CriticalChance] * command.Ship.MaxChipCount),
+                    min: 0,
+                    max: 1)
+                : 0;
+
+            var seedChipNameLength = seedChips.Max(x => x.Name.Length);
+
+            return seedChips.Select(chip =>
+                {
+                    double score = 0;
+                    foreach (var mod in chip.Parameters)
+                    {
+                        var val = CalcMod(mod.Value);
+                        score += mod.Key switch
+                        {
+                            ModificationType.Damage
+                            or ModificationType.CriticalDamage
+                                => val / maxMods[mod.Key],
+                            ModificationType.FireRate
+                                => (val >= 0 ? fileRateEfficiency : 1) * val / maxMods[mod.Key],
+                            ModificationType.CriticalChance
+                                => (val >= 0 ? critChanceEfficiency : 1) * val / maxMods[mod.Key],
+                            ModificationType.KineticDamage
+                                => command.Weapon.DamageType == DamageType.Kinetic ? val / maxMods[mod.Key] : 0,
+                            ModificationType.TermalDamage
+                                => command.Weapon.DamageType == DamageType.Termal ? val / maxMods[mod.Key] : 0,
+                            ModificationType.ElectromagneticDamage
+                                => command.Weapon.DamageType == DamageType.Electromagnetic ? val / maxMods[mod.Key] : 0,
+                            ModificationType.AlienDamage
+                                => command.DamageTarget == DamageTarget.Alien || command.DamageTarget == DamageTarget.DestroyerAlien ? val / maxMods[mod.Key] : 0,
+                            ModificationType.DestroyerDamage
+                                => command.DamageTarget == DamageTarget.Destroyer || command.DamageTarget == DamageTarget.DestroyerAlien ? val / maxMods[mod.Key] : 0,
+                            _ => 0
+                        };
+                    }
+
+                    return (chip, score);
+                })
+                .ToArray();
+        }
     }
 }
