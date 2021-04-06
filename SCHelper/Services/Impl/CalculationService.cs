@@ -56,7 +56,7 @@ namespace SCHelper.Services.Impl
                             trackIter++;
                             return CalcDps(cmd, seedChips);
                         })
-                        .OrderByDescending(x => x.DamageTarget[cmd.DamageTarget].Dps)
+                        .OrderByDescending(x => x.DamageTarget[cmd.DamageTarget].Dps[cmd.DpsType])
                         .First();
 
                     foreach (var seedChip in result.SeedChips)
@@ -98,13 +98,20 @@ namespace SCHelper.Services.Impl
 
             var hitTime = command.Weapon.HitTime * multipliers[ModificationType.HitTime];
             var coollingTime = command.Weapon.CoolingTime * multipliers[ModificationType.CoolingTime];
+            var dpsWithHitMultiplier = hitTime / (hitTime + coollingTime);
+
+            var dpsWithResistanseMultiplier = 1 + multipliers[ModificationType.DecreaseResistance] - command.EnemyResistance;
 
             var damageDescription = new DamageDescription(
                 Damage: damage,
                 CriticalDamage: damage * criticalDamageMultiplier,
-                Dps: dps,
-                DpsWithHit: dps * hitTime / (hitTime + coollingTime),
-                DpsWithResistance: dps * (1 + multipliers[ModificationType.DecreaseResistance] - command.EnemyResistance));
+                Dps: new Dictionary<DpsType, double>
+                {
+                    [DpsType.Normal] = dps,
+                    [DpsType.WithHit] = dps * dpsWithHitMultiplier,
+                    [DpsType.WithResistance] = dps * dpsWithResistanseMultiplier,
+                    [DpsType.WithHitAndResistance] = dps * dpsWithHitMultiplier * dpsWithResistanseMultiplier,
+                });
             var destroyerDamageDescription = damageDescription.Multiply(multipliers[ModificationType.DestroyerDamage]);
 
             return new CalculationResult(

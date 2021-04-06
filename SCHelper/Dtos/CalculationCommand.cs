@@ -5,6 +5,7 @@ namespace SCHelper.Dtos
     public record CalculationCommand(
         string Name,
         DamageTarget DamageTarget,
+        DpsType DpsType,
         double EnemyResistance,
         Ship Ship,
         Weapon Weapon,

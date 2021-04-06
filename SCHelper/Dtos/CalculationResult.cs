@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace SCHelper.Dtos
 {
@@ -21,9 +22,7 @@ namespace SCHelper.Dtos
     public record DamageDescription(
         double Damage,
         double CriticalDamage,
-        double Dps,
-        double DpsWithHit,
-        double DpsWithResistance);
+        Dictionary<DpsType, double> Dps);
 
     public static class DamageDescriptionExtension
     {
@@ -31,8 +30,6 @@ namespace SCHelper.Dtos
             => new DamageDescription(
                 Damage: source.Damage * multiplier,
                 CriticalDamage: source.CriticalDamage * multiplier,
-                Dps: source.Dps * multiplier,
-                DpsWithHit: source.DpsWithHit * multiplier,
-                DpsWithResistance: source.DpsWithResistance * multiplier);
+                Dps: source.Dps.ToDictionary(x => x.Key, x => x.Value * multiplier));
     }
 }

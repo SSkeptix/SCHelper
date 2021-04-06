@@ -7,6 +7,14 @@
         Electromagnetic,
     }
 
+    public enum DpsType
+    {
+        Normal,
+        WithHit,
+        WithResistance,
+        WithHitAndResistance,
+    }
+
     public enum DamageTarget
     {
         Normal,
