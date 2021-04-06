@@ -146,8 +146,8 @@ namespace SCHelper.Services.Impl
         public static Dictionary<ModificationType, IEnumerable<double>> CalcModifications(CalculationCommand command, SeedChip[] seedChips)
             => seedChips.Select(x => x.Parameters)
             .Append(command.Ship.Bonuses)
-            .Append(command.Implants)
-            .Append(command.Modules)
+            .Append(command.Implants.SelectMany(x => x.Value.Select(y => new KeyValuePair<ModificationType, double>(x.Key, y))))
+            .Append(command.Modules.SelectMany(x => x.Value.Select(y => new KeyValuePair<ModificationType, double>(x.Key, y))))
             .Append(new Dictionary<ModificationType, double>
             {
                 [ModificationType.CriticalChance] = command.Weapon.CriticalChance ?? 0,

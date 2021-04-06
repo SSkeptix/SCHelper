@@ -9,6 +9,6 @@ namespace SCHelper.Dtos
         double EnemyResistance,
         Ship Ship,
         Weapon Weapon,
-        Dictionary<ModificationType, double> Implants,
-        Dictionary<ModificationType, double> Modules);
+        Dictionary<ModificationType, double[]> Implants,
+        Dictionary<ModificationType, double[]> Modules);
 }

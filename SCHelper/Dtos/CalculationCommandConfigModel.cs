@@ -17,7 +17,7 @@ namespace SCHelper.Dtos
 
         public double? EnemyResistance { get; set; }
 
-        public Dictionary<ModificationType, double?> Implants { get; set; }
-        public Dictionary<ModificationType, double?> Modules { get; set; }
+        public Dictionary<ModificationType, double?[]> Implants { get; set; }
+        public Dictionary<ModificationType, double?[]> Modules { get; set; }
     }
 }

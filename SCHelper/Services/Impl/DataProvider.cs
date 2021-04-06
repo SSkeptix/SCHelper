@@ -70,8 +70,8 @@ namespace SCHelper.Services.Impl
                         ?? throw new DataValidationException($"There are no ship for command. Ship name: '{cmd.ShipName}'"),
                     Weapon: weapons.FirstOrDefault(x => x.Name == cmd.WeaponName)
                         ?? throw new DataValidationException($"There are no weapon for command. Weapon name: '{cmd.WeaponName}'"),
-                    Implants: (cmd.Implants ?? Utils.GetEmptyDictionary<ModificationType, double?>()).ToDomainModel(),
-                    Modules: (cmd.Modules ?? Utils.GetEmptyDictionary<ModificationType, double?>()).ToDomainModel()
+                    Implants: (cmd.Implants ?? Utils.GetEmptyDictionary<ModificationType, double?[]>()).ToDomainModel(),
+                    Modules: (cmd.Modules ?? Utils.GetEmptyDictionary<ModificationType, double?[]>()).ToDomainModel()
                 ))
                 .ToArray();
         }

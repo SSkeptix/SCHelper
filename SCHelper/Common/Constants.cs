@@ -146,14 +146,14 @@ namespace SCHelper
                     EnemyResistance = 0,
                     Implants = new()
                     {
-                        [ModificationType.Damage] = 3,
-                        [ModificationType.CriticalDamage] = 30,
-                        [ModificationType.CriticalChance] = 10,
-                        [ModificationType.DecreaseResistance] = 10,
+                        [ModificationType.Damage] = new double?[]{ 3 },
+                        [ModificationType.CriticalDamage] = new double?[]{ 30 },
+                        [ModificationType.CriticalChance] = new double?[]{ 10 },
+                        [ModificationType.DecreaseResistance] = new double?[]{ 10 },
                     },
                     Modules = new()
                     {
-                        [ModificationType.CriticalChance] = 11,
+                        [ModificationType.CriticalChance] = new double?[]{ 11 },
                     }
                 },
                 new CalculationCommandConfigModel
@@ -165,16 +165,16 @@ namespace SCHelper
                     EnemyResistance = 0,
                     Implants = new()
                     {
-                        [ModificationType.Damage] = 3,
-                        [ModificationType.CriticalDamage] = 30,
-                        [ModificationType.CriticalChance] = 10,
-                        [ModificationType.DecreaseResistance] = 10,
+                        [ModificationType.Damage] = new double?[]{ 3 },
+                        [ModificationType.CriticalDamage] = new double?[]{ 30 },
+                        [ModificationType.CriticalChance] = new double?[]{ 10 },
+                        [ModificationType.DecreaseResistance] = new double?[]{ 10 },
                     },
                     Modules = new()
                     {
-                        [ModificationType.CriticalChance] = 10.5,
-                        [ModificationType.Damage] = -6.5,
-                        [ModificationType.FireRange] = 40.1,
+                        [ModificationType.CriticalChance] = new double?[]{ 10.5 },
+                        [ModificationType.Damage] = new double?[]{ -6.5 },
+                        [ModificationType.FireRange] = new double?[]{ 40.1 },
                     }
                 },
             },
