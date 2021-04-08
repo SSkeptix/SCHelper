@@ -27,7 +27,9 @@ namespace SCHelper.Dtos
     public static class DamageDescriptionExtension
     {
         public static DamageDescription Multiply(this DamageDescription source, double multiplier)
-            => new DamageDescription(
+            => multiplier == 1 
+            ? source
+            : new DamageDescription(
                 Damage: source.Damage * multiplier,
                 CriticalDamage: source.CriticalDamage * multiplier,
                 Dps: source.Dps.ToDictionary(x => x.Key, x => x.Value * multiplier));

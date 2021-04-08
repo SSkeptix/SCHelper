@@ -234,7 +234,7 @@ namespace SCHelper.Services.Impl
                     ModificationType.KineticDamage
                     or ModificationType.TermalDamage
                     or ModificationType.ElectromagneticDamage
-                        => CalcMultiplier(x.Value.Concat(modifications[ModificationType.Damage])),
+                        => CalcMultiplier(x.Value.Concat(modifications.GetValueOrDefault(ModificationType.Damage, Array.Empty<double>()))),
                     ModificationType.DestroyerDamage
                     or ModificationType.AlienDamage
                     or ModificationType.ElidiumDamage
@@ -247,7 +247,7 @@ namespace SCHelper.Services.Impl
                     ModificationType.CoolingTime
                         => 1 / CalcMultiplier(x.Value),
                     ModificationType.HitTime
-                        => 1 / CalcMultiplier(x.Value.Select(x => -x).Concat(modifications[ModificationType.FireRate])),
+                        => 1 / CalcMultiplier(x.Value.Select(x => -x).Concat(modifications.GetValueOrDefault(ModificationType.FireRate, Array.Empty<double>()))),
                     ModificationType.FireRate
                         => CalcMultiplier(x.Value, min: 0, max: 10),
                     ModificationType.CriticalChance
