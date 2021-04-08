@@ -142,7 +142,6 @@ namespace SCHelper
                     Name = "Berserker Asteroid",
                     ShipName = "Berserker",
                     WeaponName = "Nosovoi EM lazer 17",
-                    DamageTarget = DamageTarget.Normal,
                     EnemyResistance = 0,
                     Implants = new()
                     {
@@ -161,7 +160,6 @@ namespace SCHelper
                     Name = "Jaguar SO",
                     ShipName = "Jaguar",
                     WeaponName = "IonGun 17",
-                    DamageTarget = DamageTarget.Alien,
                     EnemyResistance = 0,
                     Implants = new()
                     {

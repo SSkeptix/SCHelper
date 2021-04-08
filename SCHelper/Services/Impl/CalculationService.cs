@@ -1,8 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
 using SCHelper.Dtos;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace SCHelper.Services.Impl
@@ -49,6 +51,8 @@ namespace SCHelper.Services.Impl
                     trackIterCount = seedChipCombinations.Length;
                     logProgress();
 
+                    var calcEfficiency = CreateCalcEfficiencyFunc(cmd.Targets);
+
                     CalculationResult result = seedChipCombinations
                         .AsParallel()
                         .Select(seedChips =>
@@ -56,7 +60,7 @@ namespace SCHelper.Services.Impl
                             trackIter++;
                             return CalcDps(cmd, seedChips);
                         })
-                        .OrderByDescending(x => x.DamageTarget[cmd.DamageTarget].Dps[cmd.DpsType])
+                        .OrderByDescending(calcEfficiency)
                         .First();
 
                     foreach (var seedChip in result.SeedChips)
@@ -70,6 +74,68 @@ namespace SCHelper.Services.Impl
             });
 
             return Utils.RepeatOnBackground(calcTask, logProgress, TimeSpan.FromSeconds(1));
+        }
+
+        public Func<CalculationResult, double> CreateCalcEfficiencyFunc(TargerPropertyModel[] targets)
+        {
+            if (targets.Length == 0) { return new Func<CalculationResult, double>((obj) => obj.DamageTarget[DamageTarget.Normal].Dps[DpsType.Normal]); }
+
+            var calculateTargetImpactFuncs = targets.Select(target =>
+                {
+                    var getPropertyValue = CreateGetMethod<CalculationResult, double>(target.Property);
+                    return new Func<CalculationResult, double>((obj) 
+                        => 1 - target.Impact + target.Impact * CutOverflow((getPropertyValue(obj) - target.Min) / (target.Best - target.Min), 0, 1));
+                })
+                .ToArray();
+
+            return new Func<CalculationResult, double>((obj) =>
+            {
+                double result = 1;
+                foreach (var calculateTargetImpact in calculateTargetImpactFuncs)
+                    result *= calculateTargetImpact(obj);
+                return result;
+            });
+        }
+
+        public Func<T, TResult> CreateGetMethod<T, TResult>(string property)
+        {
+            var sourceType = typeof(T);
+            var getters = new List<Func<object, object>>();
+
+            var propertyNames = property.Split('.');
+            foreach (var propertyName in propertyNames)
+            {
+                if (typeof(IDictionary).IsAssignableFrom(sourceType))
+                {
+                    var key = Enum.Parse(sourceType.GenericTypeArguments[0], propertyName);
+                    getters.Add(new Func<object, object>((obj) => ((IDictionary)obj)[key]));
+                    sourceType = sourceType.GenericTypeArguments[1];
+                }
+                else
+                {
+                    var propertyInfo = sourceType.GetProperty(propertyName);
+                    var method = propertyInfo.GetGetMethod();
+
+                    ParameterExpression obj = Expression.Parameter(typeof(object), "obj");
+                    Expression<Func<object, object>> expr =
+                        Expression.Lambda<Func<object, object>>(
+                            Expression.Convert(
+                                Expression.Call(
+                                    Expression.Convert(obj, method.DeclaringType),
+                                    method),
+                                typeof(object)),
+                            obj);
+
+                    getters.Add(expr.Compile());
+                    sourceType = propertyInfo.PropertyType;
+                }
+            }
+
+            return new Func<T, TResult>((obj) => {
+                object result = obj;
+                foreach (var func in getters) { result = func(result); }
+                return (TResult)result;
+            });
         }
 
         public static CalculationResult CalcDps(CalculationCommand command, SeedChip[] seedChips)

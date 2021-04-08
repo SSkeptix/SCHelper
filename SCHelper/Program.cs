@@ -1,9 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Console;
 using SCHelper.Dtos;
-using SCHelper.Exceptions;
 using SCHelper.Services;
 using SCHelper.Services.Impl;
 using System;

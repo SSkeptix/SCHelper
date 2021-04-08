@@ -62,8 +62,6 @@ namespace SCHelper.Services.Impl
             return (config.Calculate ?? Array.Empty<CalculationCommandConfigModel>())
                 .Select(cmd => new CalculationCommand(
                     Name: cmd.Name,
-                    DamageTarget: cmd.DamageTarget ?? DamageTarget.Normal,
-                    DpsType: cmd.DpsType ?? DpsType.Normal,
                     EnemyResistance: cmd.EnemyResistance ?? 0,
                     Ship: cmd.Ship?.ToDomainModel()
                         ?? ships.FirstOrDefault(x => x.Name == cmd.ShipName)
@@ -71,7 +69,8 @@ namespace SCHelper.Services.Impl
                     Weapon: weapons.FirstOrDefault(x => x.Name == cmd.WeaponName)
                         ?? throw new DataValidationException($"There are no weapon for command. Weapon name: '{cmd.WeaponName}'"),
                     Implants: (cmd.Implants ?? Utils.GetEmptyDictionary<ModificationType, double?[]>()).ToDomainModel(),
-                    Modules: (cmd.Modules ?? Utils.GetEmptyDictionary<ModificationType, double?[]>()).ToDomainModel()
+                    Modules: (cmd.Modules ?? Utils.GetEmptyDictionary<ModificationType, double?[]>()).ToDomainModel(),
+                    Targets: (cmd.Targets ?? Array.Empty<TargetPropertyConfigModel>()).Select(x => x.ToDomainModel()).ToArray()
                 ))
                 .ToArray();
         }
