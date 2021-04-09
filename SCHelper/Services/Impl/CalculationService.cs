@@ -52,13 +52,14 @@ namespace SCHelper.Services.Impl
                     logProgress();
 
                     var calcEfficiency = CreateCalcEfficiencyFunc(cmd.Targets);
+                    var cmdMods = CalcCommandMods(cmd);
 
                     CalculationResult result = seedChipCombinations
                         .AsParallel()
                         .Select(seedChips =>
                         {
                             trackIter++;
-                            return CalcDps(cmd, seedChips);
+                            return CalcShipProperties(cmd, seedChips, CalcMultipliers(cmdMods, CalcSeedChipMods(seedChips)));
                         })
                         .OrderByDescending(calcEfficiency)
                         .First();
@@ -76,7 +77,7 @@ namespace SCHelper.Services.Impl
             return Utils.RepeatOnBackground(calcTask, logProgress, TimeSpan.FromSeconds(1));
         }
 
-        public Func<CalculationResult, double> CreateCalcEfficiencyFunc(TargerPropertyModel[] targets)
+        public static Func<CalculationResult, double> CreateCalcEfficiencyFunc(TargerPropertyModel[] targets)
         {
             if (targets.Length == 0) { return new Func<CalculationResult, double>((obj) => obj.DamageTarget[DamageTarget.Normal].Dps[DpsType.Normal]); }
 
@@ -97,12 +98,12 @@ namespace SCHelper.Services.Impl
             });
         }
 
-        public Func<T, TResult> CreateGetMethod<T, TResult>(string property)
+        public static Func<T, TResult> CreateGetMethod<T, TResult>(string propertyFullName)
         {
             var sourceType = typeof(T);
             var getters = new List<Func<object, object>>();
 
-            var propertyNames = property.Split('.');
+            var propertyNames = propertyFullName.Split('.');
             foreach (var propertyName in propertyNames)
             {
                 if (typeof(IDictionary).IsAssignableFrom(sourceType))
@@ -138,11 +139,8 @@ namespace SCHelper.Services.Impl
             });
         }
 
-        public static CalculationResult CalcDps(CalculationCommand command, SeedChip[] seedChips)
+        public static CalculationResult CalcShipProperties(CalculationCommand command, SeedChip[] seedChips, Dictionary<ModificationType, double> multipliers)
         {
-            var modifications = CalcModifications(command, seedChips);
-            var multipliers = CalcMultipliers(modifications);
-
             var damage = command.Ship.WeaponCount *
                 command.Weapon.Damage *
                 multipliers[ModificationType.Damage] *
@@ -153,6 +151,7 @@ namespace SCHelper.Services.Impl
                     DamageType.Termal => multipliers[ModificationType.TermalDamage],
                     _ => throw new NotImplementedException()
                 };
+
             var fireRate = CutOverflow(command.Weapon.FireRate * multipliers[ModificationType.FireRate], 0, 10);
             var criticalDamageDpsMultiplier = command.Weapon.CriticalChance.HasValue
                 ? (1 + multipliers[ModificationType.CriticalChance] * multipliers[ModificationType.CriticalDamage])
@@ -209,8 +208,45 @@ namespace SCHelper.Services.Impl
                 SeedChips: seedChips);
         }
 
-        public static Dictionary<ModificationType, IEnumerable<double>> CalcModifications(CalculationCommand command, SeedChip[] seedChips)
-            => seedChips.Select(x => x.Parameters)
+        public static Dictionary<ModificationType, double> CalcMultipliers(Dictionary<ModificationType, double> cmdMods, Dictionary<ModificationType, double> chipMods)
+        {
+            var dict = Utils.GetEnumValues<ModificationType>()
+                .ToDictionary(x => x, x => cmdMods.GetValueOrDefault(x) + chipMods.GetValueOrDefault(x));
+            return dict.ToDictionary(x => x.Key,
+                x => x.Key switch
+                {
+                    ModificationType.Damage
+                        => 1,
+                    ModificationType.KineticDamage
+                    or ModificationType.TermalDamage
+                    or ModificationType.ElectromagneticDamage
+                        => CalcVal(x.Value + dict[ModificationType.Damage]),
+                    ModificationType.DestroyerDamage
+                    or ModificationType.AlienDamage
+                    or ModificationType.ElidiumDamage
+                    or ModificationType.FireRange
+                    or ModificationType.ProjectiveSpeed
+                    or ModificationType.FireSpread
+                    or ModificationType.ModuleReloadingSpeed
+                        => CalcVal(x.Value),
+                    ModificationType.CoolingTime
+                        => 1 / CalcVal(x.Value),
+                    ModificationType.HitTime
+                        => 1 / CalcVal(x.Value + dict[ModificationType.FireRate]),
+                    ModificationType.FireRate
+                        => CutOverflow(CalcVal(x.Value), min: 0, max: 10),
+                    ModificationType.CriticalChance
+                        => CutOverflow(CalcVal(x.Value), min: 1, max: 2) - 1,
+                    ModificationType.CriticalDamage
+                        => CutOverflow(CalcVal(x.Value), min: 1) - 1,
+                    ModificationType.DecreaseResistance
+                        => x.Value,
+                    _ => throw new NotImplementedException()
+                });
+        }
+
+        public static Dictionary<ModificationType, double> CalcCommandMods(CalculationCommand command)
+            => CalcMods(Enumerable.Empty<Dictionary<ModificationType, double>>()
             .Append(command.Ship.Bonuses)
             .Append(command.Implants.SelectMany(x => x.Value.Select(y => new KeyValuePair<ModificationType, double>(x.Key, y))))
             .Append(command.Modules.SelectMany(x => x.Value.Select(y => new KeyValuePair<ModificationType, double>(x.Key, y))))
@@ -220,55 +256,28 @@ namespace SCHelper.Services.Impl
                 [ModificationType.CriticalDamage] = command.Weapon.CriticalDamage ?? 0,
                 [ModificationType.DecreaseResistance] = command.Weapon.DecreaseResistance,
             })
-            .SelectMany(x => x)
-            .GroupBy(x => x.Key)
-            .ToDictionary(x => x.Key, x => x.Select(y => y.Value).Where(x => x != 0));
+            .SelectMany(x => x));
 
-        public static Dictionary<ModificationType, double> CalcMultipliers(Dictionary<ModificationType, IEnumerable<double>> modifications)
-            => Utils.GetEmptyDictionary<ModificationType, double>()
-            .Override(modifications.ToDictionary(x => x.Key,
-                x => x.Key switch
-                {
-                    ModificationType.Damage
-                        => 1,
-                    ModificationType.KineticDamage
-                    or ModificationType.TermalDamage
-                    or ModificationType.ElectromagneticDamage
-                        => CalcMultiplier(x.Value.Concat(modifications.GetValueOrDefault(ModificationType.Damage, Array.Empty<double>()))),
-                    ModificationType.DestroyerDamage
-                    or ModificationType.AlienDamage
-                    or ModificationType.ElidiumDamage
-                    or ModificationType.FireRange
-                    or ModificationType.ProjectiveSpeed
-                        => CalcMultiplier(x.Value),
-                    ModificationType.FireSpread
-                    or ModificationType.ModuleReloadingSpeed
-                        => CalcMultiplier(x.Value.Select(x => -x)),
-                    ModificationType.CoolingTime
-                        => 1 / CalcMultiplier(x.Value),
-                    ModificationType.HitTime
-                        => 1 / CalcMultiplier(x.Value.Select(x => -x).Concat(modifications.GetValueOrDefault(ModificationType.FireRate, Array.Empty<double>()))),
-                    ModificationType.FireRate
-                        => CalcMultiplier(x.Value, min: 0, max: 10),
-                    ModificationType.CriticalChance
-                        => CalcMultiplier(x.Value, min: 1, max: 2) - 1,
-                    ModificationType.CriticalDamage
-                        => CalcMultiplier(x.Value, min: 1) - 1,
-                    ModificationType.DecreaseResistance
-                        => x.Value.Sum(),
-                    _ => throw new NotImplementedException()
-                })
-            );
+        public static Dictionary<ModificationType, double> CalcSeedChipMods(SeedChip[] seedChips)
+            => CalcMods(seedChips.SelectMany(x => x.Parameters));
+
+        public static Dictionary<ModificationType, double> CalcMods(IEnumerable<KeyValuePair<ModificationType, double>> modifications)
+            => modifications.Select(x => new KeyValuePair<ModificationType, double>(x.Key, x.Key switch
+            {
+                ModificationType.FireSpread
+                or ModificationType.ModuleReloadingSpeed
+                or ModificationType.HitTime
+                    => CalcMod(-x.Value),
+                ModificationType.DecreaseResistance
+                    => x.Value,
+                _ => CalcMod(x.Value)
+            }))
+            .GroupBy(x => x.Key)
+            .ToDictionary(x => x.Key, x => x.Sum(y => y.Value));
 
         public static double CalcMod(double x) => x < 0 ? x / (1 + x) : x;
         public static double CalcVal(double x) => x < 0 ? 1 / (1 - x) : 1 + x;
         public static double CutOverflow(double value, double min = double.MinValue, double max = double.MaxValue)
             => Math.Min(max, Math.Max(min, value));
-        public static double CalcMultiplier(IEnumerable<double> modifications, double min = double.MinValue, double max = double.MaxValue)
-            => CutOverflow(
-                value: CalcVal(modifications.Select(CalcMod).Sum()),
-                min: min,
-                max: max
-            );
     }
 }
