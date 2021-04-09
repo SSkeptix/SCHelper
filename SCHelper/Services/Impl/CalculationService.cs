@@ -11,6 +11,7 @@ namespace SCHelper.Services.Impl
 {
     public class CalculationService : ICalculationService
     {
+        private readonly object BestResultLock = new object();
         private readonly ILogger<CalculationService> logger;
 
         public CalculationService(ILogger<CalculationService> logger)
@@ -54,15 +55,27 @@ namespace SCHelper.Services.Impl
                     var calcEfficiency = CreateCalcEfficiencyFunc(cmd.Targets);
                     var cmdMods = CalcCommandMods(cmd);
 
-                    CalculationResult result = seedChipCombinations
-                        .AsParallel()
-                        .Select(seedChips =>
+                    double bestScore = 0;
+                    CalculationResult result = null;
+
+                    Parallel.ForEach(seedChipCombinations, seedChips =>
+                    {
+                        trackIter++;
+                        var currentResult = CalcShipProperties(cmd, seedChips, CalcMultipliers(cmdMods, CalcSeedChipMods(seedChips)));
+                        var score = calcEfficiency(currentResult);
+
+                        if (score > bestScore)
                         {
-                            trackIter++;
-                            return CalcShipProperties(cmd, seedChips, CalcMultipliers(cmdMods, CalcSeedChipMods(seedChips)));
-                        })
-                        .OrderByDescending(calcEfficiency)
-                        .First();
+                            lock (BestResultLock)
+                            {
+                                if (score > bestScore)
+                                {
+                                    bestScore = score;
+                                    result = currentResult;
+                                }
+                            }
+                        }
+                    });
 
                     foreach (var seedChip in result.SeedChips)
                         seedChipsList.Remove(seedChip);
