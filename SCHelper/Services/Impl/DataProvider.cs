@@ -9,15 +9,12 @@ namespace SCHelper.Services.Impl
     public class DataProvider : IDataProvider
     {
         private readonly ConfigModel config;
-        private readonly IConversionService conversionService;
         private readonly IFileReader fileReader;
 
         public DataProvider(IOptions<ConfigModel> configModel,
-            IConversionService conversionService,
             IFileReader fileReader)
         {
             this.config = configModel.Value;
-            this.conversionService = conversionService;
             this.fileReader = fileReader;
         }
 
