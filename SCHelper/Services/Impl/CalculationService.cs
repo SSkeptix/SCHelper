@@ -61,7 +61,8 @@ namespace SCHelper.Services.Impl
                     Parallel.ForEach(seedChipCombinations, seedChips =>
                     {
                         trackIter++;
-                        var currentResult = CalcShipProperties(cmd, seedChips, CalcMultipliers(cmdMods, CalcSeedChipMods(seedChips)));
+                        var multipliers = CalcMultipliers(cmdMods, CalcSeedChipMods(seedChips), cmd.Weapon.DamageType);
+                        var currentResult = CalcShipProperties(cmd, seedChips, multipliers);
                         var score = calcEfficiency(currentResult);
 
                         if (score > bestScore)
@@ -156,14 +157,7 @@ namespace SCHelper.Services.Impl
         {
             var damage = command.Ship.WeaponCount *
                 command.Weapon.Damage *
-                multipliers[ModificationType.Damage] *
-                command.Weapon.DamageType switch
-                {
-                    DamageType.Electromagnetic => multipliers[ModificationType.ElectromagneticDamage],
-                    DamageType.Kinetic => multipliers[ModificationType.KineticDamage],
-                    DamageType.Termal => multipliers[ModificationType.TermalDamage],
-                    _ => throw new NotImplementedException()
-                };
+                multipliers[ModificationType.Damage];
 
             var fireRate = CutOverflow(command.Weapon.FireRate * multipliers[ModificationType.FireRate], 0, 10);
             var criticalDamageDpsMultiplier = command.Weapon.CriticalChance.HasValue
@@ -221,7 +215,7 @@ namespace SCHelper.Services.Impl
                 SeedChips: seedChips);
         }
 
-        public static Dictionary<ModificationType, double> CalcMultipliers(Dictionary<ModificationType, double> cmdMods, Dictionary<ModificationType, double> chipMods)
+        public static Dictionary<ModificationType, double> CalcMultipliers(Dictionary<ModificationType, double> cmdMods, Dictionary<ModificationType, double> chipMods, DamageType damageType)
         {
             var dict = Utils.GetEnumValues<ModificationType>()
                 .ToDictionary(x => x, x => cmdMods.GetValueOrDefault(x) + chipMods.GetValueOrDefault(x));
@@ -229,11 +223,17 @@ namespace SCHelper.Services.Impl
                 x => x.Key switch
                 {
                     ModificationType.Damage
-                        => 1,
+                        => CalcVal(x.Value + damageType switch
+                        {
+                            DamageType.Electromagnetic => dict[ModificationType.ElectromagneticDamage],
+                            DamageType.Kinetic => dict[ModificationType.KineticDamage],
+                            DamageType.Termal => dict[ModificationType.TermalDamage],
+                            _ => throw new NotImplementedException()
+                        }),
                     ModificationType.KineticDamage
                     or ModificationType.TermalDamage
                     or ModificationType.ElectromagneticDamage
-                        => CalcVal(x.Value + dict[ModificationType.Damage]),
+                        => 1,
                     ModificationType.DestroyerDamage
                     or ModificationType.AlienDamage
                     or ModificationType.ElidiumDamage
