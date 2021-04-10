@@ -36,10 +36,12 @@ namespace SCHelper
 
         public void GenerateDocumentation()
         {
+            /*
             this.exportDataService.ExportJson(Constants.ConfigFilePath, SampleData.AppSettings);
             this.exportDataService.ExportCsv(SampleData.AppSettings.ShipsFilePath, SampleData.ShipCsvModels);
             this.exportDataService.ExportCsv(SampleData.AppSettings.WeaponsFilePath, SampleData.WeaponConfigModels);
             this.exportDataService.ExportCsv(SampleData.AppSettings.SeedChipsFilePath, SampleData.SeedChipCsvModels);
+            */
             //TODO: Add ReadMe.txt file generation
         }
 

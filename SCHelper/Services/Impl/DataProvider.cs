@@ -23,36 +23,33 @@ namespace SCHelper.Services.Impl
 
         public Weapon[] GetWeapons()
             => (config.Weapons
-                    ?? (config.WeaponsFilePath != null
-                        ? this.fileReader.Read<WeaponConfigModel>(config.WeaponsFilePath)
-                        : null)
-                    ?? Array.Empty<WeaponConfigModel>()
-                )
-                .Where(x => x != null)
-                .Select(x => x.ToDomainModel())
-                .ToArray();
+                ?? (config.WeaponsFilePath != null
+                    ? this.fileReader.Read<WeaponConfigModel>(config.WeaponsFilePath)
+                    : Array.Empty<WeaponConfigModel>())
+            )
+            .Where(x => x != null)
+            .Select(x => x.ToDomainModel())
+            .ToArray();
 
         public Ship[] GetShips()
-            => this.config.Ships
-                ?.Where(x => x != null)
-                .Select(x => x.ToDomainModel())
-                .ToArray()
-            ?? (this.config.ShipsFilePath != null ? this.fileReader.Read<ShipCsvModel>(config.ShipsFilePath) : null)
-                ?.Where(x => x != null)
-                .Select(x => x.ToDomainModel())
-                .ToArray()
-            ?? Array.Empty<Ship>();
+            => (this.config.Ships 
+                ?? (this.config.ShipsFilePath != null 
+                    ? this.fileReader.Read<ShipConfigModel>(config.ShipsFilePath)
+                    : Array.Empty<ShipConfigModel>())
+            )
+            ?.Where(x => x != null)
+            .Select(x => x.ToDomainModel())
+            .ToArray();
 
         public SeedChip[] GetSeedChips()
-            => this.config.SeedChips
-                ?.Where(x => x != null)
-                .Select(x => x.ToDomainModel())
-                .ToArray()
-            ?? (this.config.SeedChipsFilePath != null ? this.fileReader.Read<SeedChipCsvModel>(config.SeedChipsFilePath) : null)
-                ?.Where(x => x != null)
-                .Select(x => x.ToDomainModel())
-                .ToArray()
-            ?? Array.Empty<SeedChip>();
+            => (this.config.SeedChips
+                ?? (this.config.SeedChipsFilePath != null
+                    ? this.fileReader.Read<SeedChipConfigModel>(config.SeedChipsFilePath)
+                    : Array.Empty<SeedChipConfigModel>())
+            )
+            ?.Where(x => x != null)
+            .Select(x => x.ToDomainModel())
+            .ToArray();
 
         public CalculationCommand[] GetCalculationCommands()
         {
