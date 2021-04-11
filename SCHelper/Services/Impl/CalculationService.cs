@@ -36,13 +36,7 @@ namespace SCHelper.Services.Impl
                 foreach (var cmd in commands)
                 {
                     var seedChipCombinations = Utils.GetAllCombinations(
-                            data: seedChipsList
-                                .Where(x => x.Level <= cmd.Ship.Level
-                                    && (cmd.Weapon.CriticalChance.HasValue || x.Parameters.GetValueOrDefault(ModificationType.CriticalChance) >= 0)
-                                    && (cmd.Weapon.CriticalDamage.HasValue || x.Parameters.GetValueOrDefault(ModificationType.CriticalDamage) >= 0)
-                                    && (cmd.Weapon.FireSpread.HasValue || x.Parameters.GetValueOrDefault(ModificationType.FireSpread) >= 0)
-                                    && (cmd.Weapon.ProjectiveSpeed.HasValue || x.Parameters.GetValueOrDefault(ModificationType.ProjectiveSpeed) >= 0)
-                                )
+                            data: GetSuitableSeedChips(seedChipsList, cmd)
                                 .ToArray(),
                             count: cmd.Ship.MaxChipCount)
                         .ToArray();
@@ -90,6 +84,15 @@ namespace SCHelper.Services.Impl
 
             return Utils.RepeatOnBackground(calcTask, logProgress, TimeSpan.FromSeconds(1));
         }
+
+        private static IEnumerable<SeedChip> GetSuitableSeedChips(IEnumerable<SeedChip> seedChips, CalculationCommand cmd)
+            => seedChips
+            .Where(x => x.Level <= cmd.Ship.Level
+                && (cmd.Weapon.CriticalChance.HasValue || x.Parameters.GetValueOrDefault(ModificationType.CriticalChance) >= 0)
+                && (cmd.Weapon.CriticalDamage.HasValue || x.Parameters.GetValueOrDefault(ModificationType.CriticalDamage) >= 0)
+                && (cmd.Weapon.FireSpread.HasValue || x.Parameters.GetValueOrDefault(ModificationType.FireSpread) >= 0)
+                && (cmd.Weapon.ProjectiveSpeed.HasValue || x.Parameters.GetValueOrDefault(ModificationType.ProjectiveSpeed) >= 0)
+            );
 
         public static Func<CalculationResult, double> CreateCalcEfficiencyFunc(TargerPropertyModel[] targets)
         {
