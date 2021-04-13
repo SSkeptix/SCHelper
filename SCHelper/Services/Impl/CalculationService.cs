@@ -13,10 +13,13 @@ namespace SCHelper.Services.Impl
     {
         private readonly object BestResultLock = new object();
         private readonly ILogger<CalculationService> logger;
+        private readonly IMathService mathService;
 
-        public CalculationService(ILogger<CalculationService> logger)
+        public CalculationService(ILogger<CalculationService> logger,
+            IMathService mathService)
         {
             this.logger = logger;
+            this.mathService = mathService;
         }
 
         public Task<CalculationResult[]> Calc(CalculationCommand[] commands, SeedChip[] seedChips)
@@ -35,7 +38,7 @@ namespace SCHelper.Services.Impl
                 var results = new List<CalculationResult>();
                 foreach (var cmd in commands)
                 {
-                    var seedChipCombinations = Utils.GetAllCombinations(
+                    var seedChipCombinations = this.mathService.GetAllCombinations(
                             data: GetSuitableSeedChips(seedChipsList, cmd)
                                 .ToArray(),
                             count: cmd.Ship.MaxChipCount)
