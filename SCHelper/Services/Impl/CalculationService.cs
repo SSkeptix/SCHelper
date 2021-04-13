@@ -26,7 +26,7 @@ namespace SCHelper.Services.Impl
         {
             string trackShipName = "Initialization";
             int trackIter = -1;
-            int trackIterCount = -1;
+            long trackIterCount = -1;
 
             var logProgress = new Action(() => this.logger.LogInformation($"{trackShipName} - {trackIter} / {trackIterCount}"));
 
@@ -38,15 +38,11 @@ namespace SCHelper.Services.Impl
                 var results = new List<CalculationResult>();
                 foreach (var cmd in commands)
                 {
-                    var seedChipCombinations = this.mathService.GetAllCombinations(
-                            data: GetSuitableSeedChips(seedChipsList, cmd)
-                                .ToArray(),
-                            count: cmd.Ship.MaxChipCount)
-                        .ToArray();
+                    var suitableSeedChips = GetSuitableSeedChips(seedChipsList, cmd).ToArray();
 
                     trackShipName = cmd.Ship.Name;
                     trackIter = 0;
-                    trackIterCount = seedChipCombinations.Length;
+                    trackIterCount = this.mathService.GetAllCombinationsCount(suitableSeedChips.Length, cmd.Ship.MaxChipCount);
                     logProgress();
 
                     var calcEfficiency = CreateCalcEfficiencyFunc(cmd.Targets);
@@ -55,6 +51,7 @@ namespace SCHelper.Services.Impl
                     double bestScore = 0;
                     CalculationResult result = null;
 
+                    var seedChipCombinations = this.mathService.GetAllCombinations(suitableSeedChips, cmd.Ship.MaxChipCount);
                     Parallel.ForEach(seedChipCombinations, seedChips =>
                     {
                         trackIter++;

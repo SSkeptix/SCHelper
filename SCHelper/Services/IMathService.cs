@@ -5,6 +5,8 @@ namespace SCHelper.Services
 {
     public interface IMathService
     {
+        long GetAllCombinationsCount(int itemsCount, int count);
+
         IEnumerable<T[]> GetAllCombinations<T>(T[] data, int count);
 
         IEnumerable<T[]> GetAllPermutations<T>(T[] data);

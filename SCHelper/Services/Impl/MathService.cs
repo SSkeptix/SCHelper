@@ -39,6 +39,20 @@ namespace SCHelper.Services.Impl
             }
         }
 
+        public long GetAllCombinationsCount(int itemsCount, int count)
+        {
+            if (itemsCount <= count) return 1;
+
+            long result = 1;
+            for (int i = 0; i < count; i++)
+                result *= itemsCount - i;
+
+            for (int i = 0; i < count; i++)
+                result /= count - i;
+
+            return result;
+        }
+
         public IEnumerable<T[]> GetAllPermutations<T>(T[] data)
         {
             void SwapItems(int[] sequence, int index_0, int index_1)

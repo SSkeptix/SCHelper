@@ -17,6 +17,19 @@ namespace SCHelper.UnitTests.Services.Impl
             this.subject = new MathService();
         }
 
+        [TestCase(1L, 5, 3)]
+        [TestCase(1L, 5, 5)]
+        [TestCase(6L, 5, 6)]
+        [TestCase(5_461_512L, 5, 60)]
+        public void GetAllCombinationCount(long expectedResult, int count, int itemsCount)
+        {
+            // Act
+            var result = this.subject.GetAllCombinationsCount(itemsCount, count);
+
+            // Assert
+            Assert.AreEqual(expectedResult, result);
+        }
+
         [Test]
         public void GetAllPermutations()
         {
