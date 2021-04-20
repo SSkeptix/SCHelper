@@ -51,9 +51,9 @@ namespace SCHelper.UnitTests.Services.Impl
 
         [Test]
         // [TestCaseSource(nameof(BuildOrderedClusters_TestCases))] It doesn't work
-        public void BuildOrderedClusters()
+        public void BuildOrientedGraph()
         {
-            var testCases = BuildOrderedClusters_TestCases();
+            var testCases = BuildOrientedGraph_TestCases();
 
             // Arrange
             var expectedResults = new (int x, int y)[][]
@@ -78,15 +78,91 @@ namespace SCHelper.UnitTests.Services.Impl
             foreach (var data in testCases)
             {
                 // Act
-                var result = this.subject.BuildOrderedClusters(data, comparer).ToArray();
+                var result = this.subject.BuildOrientedGraph(data, comparer).ToArray();
 
                 // Assert
-                Assert.AreEqual(expectedResults.Length, result.Length);
-                Assert.IsTrue(expectedResults.All(x => result.Any(x => x.SequenceEqual(x))));
+                var queues = BuildQueuesOfChildren(result).ToArray();
+                Assert.AreEqual(expectedResults.Length, queues.Length);
+                Assert.IsTrue(expectedResults.All(x => queues.Any(x => x.SequenceEqual(x))));
             }
         }
 
-        static (int, int)[][] BuildOrderedClusters_TestCases()
+        [Test]
+        // [TestCaseSource(nameof(BuildOrderedClusters_TestCases))] It doesn't work
+        public void BuildClusteredData()
+        {
+            var testCases = BuildOrientedGraph_TestCases();
+
+            var comparer = new Func<(int, int), (int, int), CompareResult>(((int x, int y) a, (int x, int y) b) =>
+            {
+                if (a.x >= b.x && a.y >= b.y) return CompareResult.GreaterOrEqual;
+                if (a.x <= b.x && a.y <= b.y) return CompareResult.Less;
+                return CompareResult.NotComparable;
+            });
+
+            foreach (var data in testCases)
+            {
+                var nodes = this.subject.BuildOrientedGraph(data, comparer).ToArray();
+
+                // Act
+                var result = this.subject.BuildClusteredData(nodes, 5);
+            }
+        }
+
+        [Test]
+        // [TestCaseSource(nameof(BuildOrderedClusters_TestCases))] It doesn't work
+        public void GetAllOptimizedCombinations_2()
+        {
+            // Arrange
+            //var data = new (int x, int y)[] { (6, 4), (5, 5), (5, 5), (4, 6), (4, 6), (4, 6), (3, 8), (3, 8), (3, 8), (3, 7), (2, 8) };
+            var data = BuildOrientedGraph_TestCases().First();
+
+            var comparer = new Func<(int, int), (int, int), CompareResult>(((int x, int y) a, (int x, int y) b) =>
+            {
+                if (a.x >= b.x && a.y >= b.y) return CompareResult.GreaterOrEqual;
+                if (a.x <= b.x && a.y <= b.y) return CompareResult.Less;
+                return CompareResult.NotComparable;
+            });
+
+            var nodes = this.subject.BuildOrientedGraph(data, comparer).ToArray();
+            var clusteredData = this.subject.BuildClusteredData(nodes, 5);
+            var result = this.subject.GetAllOptimizedCombinations(clusteredData).ToArray();
+        }
+
+        private IEnumerable<T[]> BuildQueuesOfChildren<T>(OrientedGraphNode<T>[] nodes)
+        {
+            var currentResult = new T[nodes.Length];
+            var queues = new Queue<OrientedGraphNode<T>>[nodes.Length];
+            int currentIndex = 0;
+            queues[0] = new Queue<OrientedGraphNode<T>>(nodes.Where(x => !x.Parents.Any()));
+            while (currentIndex >= 0)
+            {
+                if (queues[currentIndex].Count > 0)
+                {
+                    var node = queues[currentIndex].Peek();
+                    currentResult[currentIndex] = node.Item;
+
+                    if (node.Children.Any())
+                    {
+                        currentIndex++;
+                        queues[currentIndex] = new Queue<OrientedGraphNode<T>>(node.Children);
+                    }
+                    else
+                    {
+                        yield return currentResult.Take(currentIndex + 1).ToArray();
+                        queues[currentIndex].Dequeue();
+                    }
+                }
+                else
+                {
+                    currentIndex--;
+                    if (currentIndex >= 0)
+                        queues[currentIndex].Dequeue();
+                }
+            }
+        }
+
+        static (int, int)[][] BuildOrientedGraph_TestCases()
             => new (int x, int y)[][]
             {
                 new(int x, int y)[] { (5, 7), (3, 8), (2, 3), (3, 3), (2, 4), (4, 2), (7, 5), (5, 5), (3, 8), (5, 9), },

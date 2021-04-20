@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SCHelper.Services.Impl;
+using System;
 using System.Collections.Generic;
 
 namespace SCHelper.Services
@@ -11,7 +12,7 @@ namespace SCHelper.Services
 
         IEnumerable<T[]> GetAllPermutations<T>(T[] data);
 
-        IEnumerable<T[]> BuildOrderedClusters<T>(T[] data, Func<T, T, CompareResult> compare);
+        OrientedGraphNode<T>[] BuildOrientedGraph<T>(T[] data, Func<T, T, CompareResult> compare);
     }
 
     public enum CompareResult

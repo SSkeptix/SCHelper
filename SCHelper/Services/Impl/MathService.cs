@@ -89,7 +89,7 @@ namespace SCHelper.Services.Impl
                 yield return ToData(s);
         }
 
-        public IEnumerable<T[]> BuildOrderedClusters<T>(T[] data, Func<T, T, CompareResult> compare)
+        public OrientedGraphNode<T>[] BuildOrientedGraph<T>(T[] data, Func<T, T, CompareResult> compare)
         {
             var compares = new int[data.Length, data.Length];
             for (int rowIndex = 0; rowIndex < data.Length; rowIndex++)
@@ -142,35 +142,136 @@ namespace SCHelper.Services.Impl
                     nodes[childNodeIndex].Parents.Add(nodes[rowIndex]);
             }
 
-            var currentResult = new T[data.Length];
-            var queues = new Queue<OrientedGraphNode<T>>[data.Length];
-            int currentIndex = 0;
-            queues[0] = new Queue<OrientedGraphNode<T>>(nodes.Where(x => !x.Parents.Any()));
-            while(currentIndex >= 0)
-            {
-                if (queues[currentIndex].Count > 0)
-                {
-                    var node = queues[currentIndex].Peek();
-                    currentResult[currentIndex] = node.Item;
+            return nodes;
+        }
 
-                    if (node.Children.Any())
+        public List<T[]>[][] BuildClusteredData<T>(OrientedGraphNode<T>[] graphNodes, int maxCountOfItems)
+        {
+            var rootNodes = graphNodes.Where(x => !x.Parents.Any()).ToArray();
+
+            var currentResult = new T[maxCountOfItems];
+            var queues = new Queue<OrientedGraphNode<T>>[maxCountOfItems];
+            queues[0] = new Queue<OrientedGraphNode<T>>(rootNodes);
+
+            var result = new List<T[]>[rootNodes.Length][];
+            for (int i = 0; i < result.Length; i++)
+            {
+                result[i] = new List<T[]>[maxCountOfItems];
+                for (int j = 0; j < maxCountOfItems; j++)
+                    result[i][j] = new List<T[]>();
+            }
+
+            var rootNodeIndex = 0;
+            int nodeDepthIndex = 0;
+            while (nodeDepthIndex >= 0)
+            {
+                if (queues[nodeDepthIndex].Count > 0)
+                {
+                    var node = queues[nodeDepthIndex].Peek();
+                    currentResult[nodeDepthIndex] = node.Item;
+
+                    result[rootNodeIndex][nodeDepthIndex].Add(currentResult.Take(nodeDepthIndex + 1).ToArray());
+
+                    if (node.Children.Any() && nodeDepthIndex < maxCountOfItems - 1)
                     {
-                        currentIndex++;
-                        queues[currentIndex] = new Queue<OrientedGraphNode<T>>(node.Children);
+                        nodeDepthIndex++;
+                        queues[nodeDepthIndex] = new Queue<OrientedGraphNode<T>>(node.Children);
                     }
                     else
                     {
-                        yield return currentResult.Take(currentIndex + 1).ToArray();
-                        queues[currentIndex].Dequeue();
+                        queues[nodeDepthIndex].Dequeue();
+                        if (nodeDepthIndex == 0)
+                            rootNodeIndex++;
                     }
                 }
                 else
                 {
-                    currentIndex--;
-                    if (currentIndex >= 0)
-                        queues[currentIndex].Dequeue();
+                    nodeDepthIndex--;
+                    if (nodeDepthIndex >= 0)
+                        queues[nodeDepthIndex].Dequeue();
+                    if (nodeDepthIndex == 0)
+                        rootNodeIndex++;
                 }
             }
+
+            return result;
+        }
+
+        public IEnumerable<T[]> GetAllOptimizedCombinations<T>(List<T[]>[][] clusteredData)
+        {
+            var maxCountOfItems = clusteredData[0].Length;
+            var clusterMaxLength = clusteredData
+                .Select(x =>
+                {
+                    for (int i = 1; i < maxCountOfItems; i++)
+                        if (x[i].Count == 0)
+                            return i;
+                    return maxCountOfItems;
+                })
+                .ToArray();
+
+            var currentResult = Enumerable.Repeat(-1, maxCountOfItems).ToArray();
+            
+            var index = 0;
+            while (true)
+            {
+                var currentCluster = ++currentResult[index];
+                if (currentResult[index] >= clusteredData.Length)
+                {
+                    index--;
+                    if (index < 0) { break; }
+                    continue;
+                }
+
+                var currentClusterUsage = 1;
+                while (++index < maxCountOfItems)
+                {
+                    if (currentClusterUsage >= clusterMaxLength[currentCluster])
+                    {
+                        currentCluster++;
+                        if (currentCluster >= clusteredData.Length)
+                            goto exit;
+
+                        currentClusterUsage = 1;
+                    }
+                    else
+                        currentClusterUsage++;
+                    currentResult[index] = currentCluster;
+                }
+                index--;
+
+                // ====== output result
+
+                var dict = new Dictionary<int, int>(maxCountOfItems);
+                for (int i = 0; i < maxCountOfItems; i++)
+                    dict[currentResult[i]] = dict.ContainsKey(currentResult[i])
+                        ? dict[currentResult[i]] + 1
+                        : 1;
+
+                var sources = dict.Select(x => clusteredData[x.Key][x.Value - 1]).ToArray();
+                var sourceIndex = 0;
+                var sourceIndexes = Enumerable.Repeat(-1, sources.Length).ToArray();
+
+                while (true)
+                {
+                    sourceIndexes[sourceIndex]++;
+
+                    if (sourceIndexes[sourceIndex] >= sources[sourceIndex].Count)
+                    {
+                        sourceIndex--;
+                        if (sourceIndex < 0) { break; }
+                        continue;
+                    }
+
+                    while (++sourceIndex < sources.Length)
+                        sourceIndexes[sourceIndex] = 0;
+                    sourceIndex--;
+
+                    yield return sources.SelectMany((source, i) => sources[i][sourceIndexes[i]]).ToArray();                  
+                }
+            }
+            exit:
+            _ = 0;
         }
     }
 
@@ -178,9 +279,9 @@ namespace SCHelper.Services.Impl
     {
         public T Item { get; }
 
-        public List<OrientedGraphNode<T>> Parents { get; } = new List<OrientedGraphNode<T>>();
+        public List<OrientedGraphNode<T>> Parents { get; set; } = new List<OrientedGraphNode<T>>();
 
-        public List<OrientedGraphNode<T>> Children { get; } = new List<OrientedGraphNode<T>>();
+        public List<OrientedGraphNode<T>> Children { get; set; } = new List<OrientedGraphNode<T>>();
 
         public OrientedGraphNode(T item)
         {
