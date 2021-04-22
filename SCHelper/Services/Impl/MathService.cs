@@ -215,6 +215,7 @@ namespace SCHelper.Services.Impl
             var index = 0;
             while (true)
             {
+                begin:
                 var currentCluster = ++currentResult[index];
                 if (currentResult[index] >= clusteredData.Length)
                 {
@@ -230,7 +231,7 @@ namespace SCHelper.Services.Impl
                     {
                         currentCluster++;
                         if (currentCluster >= clusteredData.Length)
-                            goto exit;
+                            goto begin;
 
                         currentClusterUsage = 1;
                     }
@@ -270,8 +271,6 @@ namespace SCHelper.Services.Impl
                     yield return sources.SelectMany((source, i) => sources[i][sourceIndexes[i]]).ToArray();                  
                 }
             }
-            exit:
-            _ = 0;
         }
     }
 
