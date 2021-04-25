@@ -1,11 +1,20 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace SCHelper.Services.Impl
 {
     public class MathService : IMathService
     {
+        private readonly ILogger<MathService> logger;
+
+        public MathService(ILogger<MathService> logger)
+        {
+            this.logger = logger;
+        }
+
         public IEnumerable<T[]> GetAllCombinations<T>(T[] data, int count)
         {
             if (count >= data.Length)
@@ -89,52 +98,74 @@ namespace SCHelper.Services.Impl
                 yield return ToData(s);
         }
 
+
+        public IEnumerable<T[]> GetAllOptimizedCombinations_Test<T>(T[] data, int count, Func<T, T, CompareResult> compare)
+        {
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+            var graph = BuildOrientedGraph(data, compare);
+            var clusteredData = BuildClusteredData(graph, count);
+
+            stopWatch.Stop();
+            this.logger.LogInformation($"Cluster time Calculation: {stopWatch.Elapsed}");
+
+            return GetAllOptimizedCombinations(clusteredData);
+        }
+
         public OrientedGraphNode<T>[] BuildOrientedGraph<T>(T[] data, Func<T, T, CompareResult> compare)
         {
-            var compares = new int[data.Length, data.Length];
+            // Build compare matrix.
+            var compareMatrix = new int[data.Length, data.Length];
             for (int rowIndex = 0; rowIndex < data.Length; rowIndex++)
             {
                 for (int columnIndex = 0; columnIndex < data.Length; columnIndex++)
                 {
                     if (rowIndex == columnIndex)
-                        compares[rowIndex, columnIndex] = 0;
+                        compareMatrix[rowIndex, columnIndex] = 0;
                     else if (rowIndex > columnIndex)
-                        compares[rowIndex, columnIndex] = -compares[columnIndex, rowIndex];
+                        compareMatrix[rowIndex, columnIndex] = -compareMatrix[columnIndex, rowIndex];
                     else
                     {
                         var compareResult = compare(data[rowIndex], data[columnIndex]);
-                        compares[rowIndex, columnIndex] = compareResult switch
+                        compareMatrix[rowIndex, columnIndex] = compareResult switch
                         {
                             CompareResult.NotComparable => 0,
                             CompareResult.GreaterOrEqual => 1,
                             CompareResult.Less => -1,
+                            _ => throw new NotImplementedException(),
                         };
                     }
                 }
             }
 
+            // Sort items in order to have less children.
             var countOfChildNodes = new (int NodeIndex, int ChildCount)[data.Length];
             for (int rowIndex = 0; rowIndex < data.Length; rowIndex++)
             {
                 var node = (NodeIndex: rowIndex, ChildCount: 0);
                 for (int columnIndex = 0; columnIndex < data.Length; columnIndex++)
-                    if (compares[rowIndex, columnIndex] == 1)
+                    if (compareMatrix[rowIndex, columnIndex] == 1)
                         node.ChildCount++;
                 countOfChildNodes[rowIndex] = node;
-            }
-            var orderedNodeIndexes = countOfChildNodes.OrderByDescending(x => x.ChildCount).Select(x => x.NodeIndex).ToArray();
+            }          
+            var orderedNodeIndexes = countOfChildNodes
+                .OrderByDescending(x => x.ChildCount)
+                .Select(x => x.NodeIndex)
+                .ToArray();
 
+            // Iterate nodes. From most bigger parrent to leafs.
             var nodes = data.Select(x => new OrientedGraphNode<T>(x)).ToArray();
             foreach (var rowIndex in orderedNodeIndexes)
             {
                 var childNodeIndexes = new List<int>(data.Length);
                 foreach (var columnIndex in orderedNodeIndexes)
-                    if (compares[rowIndex, columnIndex] == 1)
+                    if (compareMatrix[rowIndex, columnIndex] == 1)
                         childNodeIndexes.Add(columnIndex);
 
+                // Remove a child from the node, if it has another child that already has this node.
                 for (int i = childNodeIndexes.Count - 2; i >= 0; i--)
                     for (int j = childNodeIndexes.Count - 1; j > i; j--)
-                        if (compares[childNodeIndexes[i], childNodeIndexes[j]] == 1)
+                        if (compareMatrix[childNodeIndexes[i], childNodeIndexes[j]] == 1)
                             childNodeIndexes.RemoveAt(j);
 
                 nodes[rowIndex].Children.AddRange(childNodeIndexes.Select(x => nodes[x]));
@@ -142,13 +173,14 @@ namespace SCHelper.Services.Impl
                     nodes[childNodeIndex].Parents.Add(nodes[rowIndex]);
             }
 
-            return nodes;
+            // Return root (parent) nodes.
+            return nodes
+                .Where(x => !x.Parents.Any())
+                .ToArray();
         }
 
-        public List<T[]>[][] BuildClusteredData<T>(OrientedGraphNode<T>[] graphNodes, int maxCountOfItems)
+        public List<T[]>[][] BuildClusteredData<T>(OrientedGraphNode<T>[] rootNodes, int maxCountOfItems)
         {
-            var rootNodes = graphNodes.Where(x => !x.Parents.Any()).ToArray();
-
             var currentResult = new T[maxCountOfItems];
             var queues = new Queue<OrientedGraphNode<T>>[maxCountOfItems];
             queues[0] = new Queue<OrientedGraphNode<T>>(rootNodes);

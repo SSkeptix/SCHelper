@@ -49,6 +49,10 @@ namespace SCHelper.UnitTests.Services.Impl
             CollectionAssert.AreEquivalent(new int[] { 3, 2, 1 }, result[5]);
         }
 
+
+
+
+
         [Test]
         // [TestCaseSource(nameof(BuildOrderedClusters_TestCases))] It doesn't work
         public void BuildOrientedGraph()
@@ -79,11 +83,6 @@ namespace SCHelper.UnitTests.Services.Impl
             {
                 // Act
                 var result = this.subject.BuildOrientedGraph(data, comparer).ToArray();
-
-                // Assert
-                var queues = BuildQueuesOfChildren(result).ToArray();
-                Assert.AreEqual(expectedResults.Length, queues.Length);
-                Assert.IsTrue(expectedResults.All(x => queues.Any(x => x.SequenceEqual(x))));
             }
         }
 
@@ -129,38 +128,34 @@ namespace SCHelper.UnitTests.Services.Impl
             var result = this.subject.GetAllOptimizedCombinations(clusteredData).ToArray();
         }
 
-        private IEnumerable<T[]> BuildQueuesOfChildren<T>(OrientedGraphNode<T>[] nodes)
-        {
-            var currentResult = new T[nodes.Length];
-            var queues = new Queue<OrientedGraphNode<T>>[nodes.Length];
-            int currentIndex = 0;
-            queues[0] = new Queue<OrientedGraphNode<T>>(nodes.Where(x => !x.Parents.Any()));
-            while (currentIndex >= 0)
-            {
-                if (queues[currentIndex].Count > 0)
-                {
-                    var node = queues[currentIndex].Peek();
-                    currentResult[currentIndex] = node.Item;
 
-                    if (node.Children.Any())
-                    {
-                        currentIndex++;
-                        queues[currentIndex] = new Queue<OrientedGraphNode<T>>(node.Children);
-                    }
-                    else
-                    {
-                        yield return currentResult.Take(currentIndex + 1).ToArray();
-                        queues[currentIndex].Dequeue();
-                    }
-                }
-                else
+        [Test]
+        // [TestCaseSource(nameof(BuildOrderedClusters_TestCases))] It doesn't work
+        public void GetAllOptimizedCombinations_3()
+        {
+            var func = (Func<int, List<int[]>[]>)(i => new List<int[]>[]
                 {
-                    currentIndex--;
-                    if (currentIndex >= 0)
-                        queues[currentIndex].Dequeue();
-                }
-            }
+                    new List<int[]> { new int[] { i } },
+                    new List<int[]>(),
+                    new List<int[]>(),
+                    new List<int[]>(),
+                    new List<int[]>(),
+                });
+
+            var clusteredData = new List<int[]>[][]
+            {
+                func(1),
+                func(2),
+                func(3),
+                func(4),
+                func(5),
+                func(6),
+                func(7),
+            };
+
+            var result = this.subject.GetAllOptimizedCombinations(clusteredData).ToArray();
         }
+
 
         static (int, int)[][] BuildOrientedGraph_TestCases()
             => new (int x, int y)[][]

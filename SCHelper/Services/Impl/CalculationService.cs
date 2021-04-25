@@ -3,6 +3,7 @@ using SCHelper.Dtos;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -48,6 +49,14 @@ namespace SCHelper.Services.Impl
                     var calcEfficiency = CreateCalcEfficiencyFunc(cmd.Targets);
                     var cmdMods = CalcCommandMods(cmd);
 
+                    var stopWatch = new Stopwatch();
+                    stopWatch.Start();
+                    (double bestScore_optimized, CalculationResult result_optimized, int counter) = ProcessOptimizedCombinations(cmd, suitableSeedChips, calcEfficiency, cmdMods);
+                    stopWatch.Stop();
+                    this.logger.LogInformation($"Optimized count: {counter}, score: {bestScore_optimized}, time spend: {stopWatch.Elapsed}");
+
+                    stopWatch.Reset();
+                    stopWatch.Start();
                     double bestScore = 0;
                     CalculationResult result = null;
 
@@ -71,6 +80,9 @@ namespace SCHelper.Services.Impl
                             }
                         }
                     });
+                    stopWatch.Stop();
+                    this.logger.LogInformation($"Count: {trackIterCount}, score: {bestScore}, Total time spend: {stopWatch.Elapsed}");
+
 
                     foreach (var seedChip in result.SeedChips)
                         seedChipsList.Remove(seedChip);
@@ -83,6 +95,90 @@ namespace SCHelper.Services.Impl
             });
 
             return Utils.RepeatOnBackground(calcTask, logProgress, TimeSpan.FromSeconds(1));
+        }
+
+        private (double, CalculationResult, int) ProcessOptimizedCombinations(CalculationCommand cmd, SeedChip[] suitableSeedChips, Func<CalculationResult, double> calcEfficiency, Dictionary<ModificationType, double> cmdMods)
+        {
+            var func = (Func<SeedChip, SeedChip, ModificationType, double>)(
+                (SeedChip a, SeedChip b, ModificationType type) => a.Parameters.GetValueOrDefault(type) - b.Parameters.GetValueOrDefault(type)
+            );
+
+            var compare = (Func<SeedChip, SeedChip, CompareResult>)((a, b) =>
+            {
+                var diffs = new ModificationType[]
+                {
+                    ModificationType.Damage,
+                    ModificationType.KineticDamage,
+                    ModificationType.DestroyerDamage,
+                    ModificationType.FireRate,
+                    ModificationType.HitTime,
+                    ModificationType.CoolingTime,
+                    ModificationType.CriticalChance,
+                    ModificationType.CriticalDamage,
+                }.Select(x => func(a, b, x));
+
+                var bigger = diffs.Where(x => x > 0).Count();
+                var less = diffs.Where(x => x < 0).Count();
+
+                if (less == 0)
+                    return CompareResult.GreaterOrEqual;
+                if (bigger == 0)
+                    return CompareResult.Less;
+                return CompareResult.NotComparable;
+            });
+
+            double bestScore = 0;
+            CalculationResult result = null;
+            int counter = 0;
+            var seedChipCombinations = this.mathService.GetAllOptimizedCombinations_Test(suitableSeedChips, cmd.Ship.MaxChipCount, compare);
+            Parallel.ForEach(seedChipCombinations, seedChips =>
+            {
+                counter++;
+                var multipliers = CalcMultipliers(cmdMods, CalcSeedChipMods(seedChips), cmd.Weapon.DamageType);
+                var currentResult = CalcShipProperties(cmd, seedChips, multipliers);
+                var score = calcEfficiency(currentResult);
+
+                if (score > bestScore)
+                {
+                    lock (BestResultLock)
+                    {
+                        if (score > bestScore)
+                        {
+                            bestScore = score;
+                            result = currentResult;
+                        }
+                    }
+                }
+            });
+
+            return (bestScore, result, counter);
+        }
+
+        private (double, CalculationResult) ProcessAllCombinations(CalculationCommand cmd, SeedChip[] suitableSeedChips, Func<CalculationResult, double> calcEfficiency, Dictionary<ModificationType, double> cmdMods)
+        {
+            double bestScore = 0;
+            CalculationResult result = null;
+            var seedChipCombinations = this.mathService.GetAllCombinations(suitableSeedChips, cmd.Ship.MaxChipCount);
+            Parallel.ForEach(seedChipCombinations, seedChips =>
+            {
+                var multipliers = CalcMultipliers(cmdMods, CalcSeedChipMods(seedChips), cmd.Weapon.DamageType);
+                var currentResult = CalcShipProperties(cmd, seedChips, multipliers);
+                var score = calcEfficiency(currentResult);
+
+                if (score > bestScore)
+                {
+                    lock (BestResultLock)
+                    {
+                        if (score > bestScore)
+                        {
+                            bestScore = score;
+                            result = currentResult;
+                        }
+                    }
+                }
+            });
+
+            return (bestScore, result);
         }
 
         private static IEnumerable<SeedChip> GetSuitableSeedChips(IEnumerable<SeedChip> seedChips, CalculationCommand cmd)

@@ -13,6 +13,8 @@ namespace SCHelper.Services
         IEnumerable<T[]> GetAllPermutations<T>(T[] data);
 
         OrientedGraphNode<T>[] BuildOrientedGraph<T>(T[] data, Func<T, T, CompareResult> compare);
+
+        IEnumerable<T[]> GetAllOptimizedCombinations_Test<T>(T[] data, int count, Func<T, T, CompareResult> compare);
     }
 
     public enum CompareResult
